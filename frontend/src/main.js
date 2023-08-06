@@ -1,3 +1,13 @@
+const nameToPct = (name) => {
+    var hash = 0, i, chr;
+    for (i = 0; i < name.length; i++) {
+      chr = name.charCodeAt(i);
+      hash = ((hash << 5) - hash) + chr;
+      hash |= 0;
+    }
+    return hash % 100;
+}
+
 window.addEventListener("load", function() {
   var joined = false
   var username = ""
@@ -15,24 +25,18 @@ window.addEventListener("load", function() {
     let html = ""
     for (let y = 0; y < 20; y++) {
       for (let x = 0; x < 20; x++) {
-        var object = "nothing"
+        var object = "<div></div>"
         for (const proj of state.projectiles) {
           if (proj.x === x && proj.y === y) {
-            object = "projectile"
+            object = `<div><img src="/sprites/${state.theme}/projectile.png"></img></div>`
           }
         }
         for (const player of state.players) {
           if (player.position.x === x && player.position.y === y) {
-            object = "player"
-          }
+            const pct = nameToPct(player.name)
+            object = `<div class="player-color" style="background-color: hsl(${pct} 100% 40%)"><img src="/sprites/${state.theme}/player.png"></img></div>` }
         }
-
-        if (object === "nothing") {
-          html += `<div></div>`
-        } else {
-          html += `<img src="/sprites/${state.theme}/${object}.png"></img>`
-        }
-
+        html += object
       }
     }
     canvas.innerHTML = html
