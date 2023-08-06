@@ -53,6 +53,7 @@ impl State {
             }
             (_, Some(_)) => {}
         }
+        drop(peer_map_lock);
         self.inner_send_request(request)
     }
 
@@ -83,8 +84,10 @@ impl State {
         let mut peer_map_lock = self.peer_map.lock().unwrap();
         let disconnected_name = peer_map_lock.remove(&addr).unwrap().1;
         if let Some(disconnected_name) = disconnected_name {
+            drop(peer_map_lock);
+            let name = disconnected_name.clone();
             self.inner_send_request(ClientRequest {
-                name: disconnected_name.clone(),
+                name,
                 action: PlayerAction::Leave,
             })
         } else {

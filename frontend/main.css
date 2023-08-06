@@ -1,0 +1,30 @@
+body {
+    width: 400px;
+    margin: auto;
+}
+
+.username-input {
+    display: flex;
+}
+
+input {
+    flex-basis: 3;
+    flex-grow: 1;
+}
+
+button {
+    flex-basis: 1;
+    flex-grow: 1;
+}
+
+#canvas {
+  max-width: 400px;
+  background-color: gray;
+  margin: auto;
+}
+
+#canvas div {
+    float: left;
+    height: 20px;
+    width: 20px;
+}
