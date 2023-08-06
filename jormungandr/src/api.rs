@@ -1,5 +1,8 @@
 use serde::{Deserialize, Serialize};
 
+pub const WIDTH: i32 = 20;
+pub const HEIGHT: i32 = 20;
+
 #[derive(Clone, Debug, PartialEq, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum PlayerAction {
@@ -43,10 +46,21 @@ pub struct Player {
     pub health: f32,
 }
 
+/// Coordinate space: (0, 0) is top right corner
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Position {
     pub x: i32,
     pub y: i32,
+}
+
+impl Position {
+    pub fn add_x(&mut self, val: i32) {
+        self.x = (self.x + val).rem_euclid(WIDTH);
+    }
+
+    pub fn add_y(&mut self, val: i32) {
+        self.y = (self.y + val).rem_euclid(HEIGHT);
+    }
 }
 
 #[cfg(test)]

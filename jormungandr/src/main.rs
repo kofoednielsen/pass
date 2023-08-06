@@ -3,7 +3,6 @@ use std::{
     env, eprintln, fmt, io,
     net::SocketAddr,
     sync::{Arc, Mutex},
-    time::Duration,
 };
 
 use futures_channel::mpsc::{unbounded, UnboundedSender};
@@ -19,7 +18,10 @@ use tokio_tungstenite::{accept_async, WebSocketStream};
 mod api;
 mod snake;
 
-use crate::api::{ClientRequest, PlayerAction, ServerResponse};
+use crate::{
+    api::{ClientRequest, PlayerAction, ServerResponse},
+    snake::STEP_INTERVAL,
+};
 
 #[derive(Debug)]
 pub enum Error {
@@ -123,7 +125,6 @@ impl State {
     }
 
     fn step(&self, rng: &mut ThreadRng) -> Result<(), Error> {
-        println!("Step");
         let switchers = self.game_state.lock().unwrap().step(rng);
         let mut peer_map_lock = self.peer_map.lock().unwrap();
         for (recp, peer_name) in peer_map_lock.values_mut() {
@@ -196,7 +197,7 @@ async fn main() -> Result<(), Error> {
 
     let state_step = state.clone();
     tokio::spawn(async move {
-        let mut interval = time::interval(Duration::from_millis(1000));
+        let mut interval = time::interval(STEP_INTERVAL);
 
         loop {
             interval.tick().await;

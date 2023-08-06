@@ -1,22 +1,27 @@
 use rand::Rng;
 use std::collections::hash_map::Entry;
 use std::collections::{HashMap, VecDeque};
+use std::time::Duration;
 
-use crate::api::{Player, PlayerAction, Position, ServerState};
+use crate::api::{Player, PlayerAction, Position, ServerState, HEIGHT, WIDTH};
 use crate::Error;
 
-const WIDTH: i32 = 20;
-const HEIGHT: i32 = 20;
+pub const STEP_INTERVAL: Duration = Duration::from_millis(200);
+
+#[derive(Clone, Debug, PartialEq)]
+enum Direction {
+    Up,
+    Down,
+    Left,
+    Right,
+}
 
 #[derive(Clone, Debug, PartialEq)]
 struct PlayerData {
     position: Position,
     tail: VecDeque<Position>,
-    /// (x, y)
-    /// Coordinate space: (0, 0) is top right corner
-    ///
-    /// TODO: Maybe implement this as a queue of last keypresses, for better feel?
-    velocity: (i32, i32),
+    current_direction: Direction,
+    queued_directions: VecDeque<Direction>,
     client_count: usize,
 }
 
@@ -40,13 +45,15 @@ impl GameState {
                 // Do not add players to `switchers` here, they know it themselves...
             }
             (Entry::Vacant(player), PlayerAction::Join) => {
-                // TODO: Find the least populated spot on the map
+                // TODO: Find the least populated spot on the map,
+                // and a sensible direction.
                 let starting_position = Position { x: 3, y: 3 };
+                let starting_direction = Direction::Right;
                 player.insert(PlayerData {
                     position: starting_position,
                     tail: VecDeque::new(),
-                    // Start by standing still?
-                    velocity: (0, 0),
+                    current_direction: starting_direction,
+                    queued_directions: VecDeque::new(),
                     client_count: 1,
                 });
             }
@@ -54,16 +61,25 @@ impl GameState {
                 eprintln!("WARN: Somehow player {name} left without it being in the state");
             }
             (Entry::Occupied(mut player), PlayerAction::Up) => {
-                player.get_mut().velocity = (0, -1);
+                player.get_mut().queued_directions.push_back(Direction::Up);
             }
             (Entry::Occupied(mut player), PlayerAction::Down) => {
-                player.get_mut().velocity = (0, 1);
+                player
+                    .get_mut()
+                    .queued_directions
+                    .push_back(Direction::Down);
             }
             (Entry::Occupied(mut player), PlayerAction::Left) => {
-                player.get_mut().velocity = (-1, 0);
+                player
+                    .get_mut()
+                    .queued_directions
+                    .push_back(Direction::Left);
             }
             (Entry::Occupied(mut player), PlayerAction::Right) => {
-                player.get_mut().velocity = (1, 0);
+                player
+                    .get_mut()
+                    .queued_directions
+                    .push_back(Direction::Right);
             }
             (Entry::Occupied(_), PlayerAction::Attack) => {
                 // Intentionally do nothing for now
@@ -79,20 +95,54 @@ impl GameState {
     pub fn step(&mut self, rng: &mut impl Rng) -> Vec<String> {
         // Move all players, and create tail in their place
         for player in self.players.values_mut() {
-            if player.velocity == (0, 0) {
-                continue;
+            let prev_pos = player.position.clone();
+
+            // Take next direction from the queue
+            if let Some(new_direction) = player.queued_directions.pop_front() {
+                player.current_direction = new_direction;
             }
-            if let Some(tail_front) = player.tail.front() {
-                let x = player.position.x + player.velocity.0;
-                let y = player.position.y + player.velocity.1;
-                // Walk the opposite direction if we were about to _directly_ eat ourselves
-                if tail_front.x == x && tail_front.y == y {
-                    player.velocity = (-player.velocity.0, -player.velocity.1);
+
+            match player.current_direction {
+                Direction::Up => {
+                    player.position.add_y(-1);
+                }
+                Direction::Down => {
+                    player.position.add_y(1);
+                }
+                Direction::Left => {
+                    player.position.add_x(-1);
+                }
+                Direction::Right => {
+                    player.position.add_x(1);
                 }
             }
-            player.tail.push_front(player.position.clone());
-            player.position.x += player.velocity.0;
-            player.position.y += player.velocity.1;
+
+            // Walk the opposite direction if we were about to _directly_ eat ourselves
+            if let Some(tail_front) = player.tail.front() {
+                if tail_front == &player.position {
+                    match player.current_direction {
+                        Direction::Up => {
+                            player.position.add_y(2);
+                            player.current_direction = Direction::Down;
+                        }
+                        Direction::Down => {
+                            player.position.add_y(-2);
+                            player.current_direction = Direction::Up;
+                        }
+                        Direction::Left => {
+                            player.position.add_x(2);
+                            player.current_direction = Direction::Right;
+                        }
+                        Direction::Right => {
+                            player.position.add_x(-2);
+                            player.current_direction = Direction::Left;
+                        }
+                    }
+                }
+            }
+
+            // Add new tail piece
+            player.tail.push_front(prev_pos);
         }
 
         // Check player to player collisions
@@ -100,6 +150,11 @@ impl GameState {
         // Explicitly made this way so that players colliding head on still die.
         let mut dead_players = Vec::new();
         for (name, player) in self.players.iter() {
+            if player.client_count == 0 {
+                dead_players.push(name.to_string());
+                continue;
+            }
+
             for (other_name, other_player) in self.players.iter() {
                 let head_hit = player.position == other_player.position;
                 let tail_hit = other_player.tail.contains(&player.position);
