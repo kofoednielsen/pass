@@ -1,0 +1,99 @@
+<body style="width: 400px; margin: auto;">
+  <br/>
+  <input style="width: 70%" class="username-input" id="username" style="text" placeholder="username"></input> 
+  <button style="width: 28%"  class="username-input" onclick="join()">JOIN</button> 
+  <br/>
+  <br/>
+  <div style="margin: auto" id="canvas"></div>
+</body>
+<style>
+#canvas {
+  max-width: 400px;
+  background-color: gray
+}
+</style>
+<script>
+  var joined = false
+  var username = ""
+  const join = () => {
+    value = document.getElementById('username').value
+    if (value) {
+      username = value
+      const username_input = document.querySelectorAll(".username-input");
+      for (const element of username_input) {
+          element.style.visibility = 'hidden';
+      }
+      joined = true
+      console.log({name: username, action: 'join'});
+    }
+  }
+  // var socket = new WebSocket("ws://localhost:8080/ws");
+  document.addEventListener('keydown', function(event) {
+      if(event.key && joined) {
+        let action = ""
+        if (event.key === ' ') {
+          action = 'attack'
+        } else if (event.key == 'ArrowUp' || event.key == 'w') {
+          action = 'up'
+        } else if (event.key == 'ArrowDown' || event.key == 's') {
+          action = 'down'
+        } else if (event.key == 'ArrowLeft' || event.key == 'a') {
+          action = 'left'
+        } else if (event.key == 'ArrowRight' || event.key == 'd') {
+          action = 'right'
+        }
+        //socket.send({name: username, action});
+        if (action) {
+          console.log({name: username, action});
+        }
+      }
+  });
+  window.addEventListener("load", function() {
+      // create websocket instance
+      let state = {
+        "event": "state",
+        "theme": "heaven/hell",
+        "players": [
+          {
+             "name": "abc",
+             "suffx": "the destroyer",
+             "invincible": true,
+             "facing": "down",
+             "position": { "x": 2, "y": 2 },
+             "health": 10,
+          }
+        ],
+        "projectiles": [
+          { "x": 5, "y":7 },
+          { "x": 7, "y": 3 }
+        ]
+      } 
+      // add event listener reacting when message is received
+      //socket.onmessage = function (event) {
+      const canvas = document.getElementById("canvas")
+      console.log(canvas)
+      for (let y = 0; y < 20; y++) {
+        for (let x = 0; x < 20; x++) {
+          var color = "black"
+          for (const proj of state.projectiles) {
+            if (proj.x === x && proj.y === y) {
+              color = "red"
+            }
+          }
+          for (const player of state.players) {
+            if (player.position.x === x && player.position.y === y) {
+              color = "blue"
+            }
+          }
+          canvas.innerHTML += `<div style="float: left; height: 20px; width: 20px; background-color: ${color}"/>`
+        }
+      }
+      //};
+      //form[0].addEventListener("submit", function (e) {
+      //    // on forms submission send input to our server
+      //    input_text = input.value;
+      //    socket.send(input_text);
+      //    e.preventDefault()
+      //})
+  });
+</script>
