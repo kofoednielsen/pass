@@ -1,0 +1,40 @@
+WEBSOCKETS
+
+MAP er 20 x 20
+
+JSON:
+
+KLIENT SENDER:
+
+{
+  name: 'abc'
+  action: ['up', 'down', 'left', 'right', 'attack', 'join'(first action end after new conncetion)]
+}
+
+
+SERVER SENDER:
+
+{
+  event: 'death/switch server'
+}
+
+eller
+
+{
+  event: 'heaven/hell'
+  players: [
+    {
+       name: 'abc'
+       suffx: 'the destroyer'
+       invincible: true/false
+       facing: ['up', 'down', 'left', 'right']
+       position: { x: 10, y: 20 }
+       health: 10
+    }
+  ]
+  projectiles: [
+    { x: 10, y:20 }
+    { x: 20, y: 10 }
+  ]
+}
+
