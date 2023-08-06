@@ -15,13 +15,14 @@ KLIENT SENDER:
 SERVER SENDER:
 
 {
-  event: 'death/switch server'
+  event: 'switch'
 }
 
 eller
 
 {
-  event: 'heaven/hell'
+  event: 'state'
+  theme: 'heaven/hell'
   players: [
     {
        name: 'abc'
