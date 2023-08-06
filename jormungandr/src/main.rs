@@ -81,7 +81,6 @@ impl State {
     fn disconnect(&self, addr: SocketAddr) -> Result<(), Error> {
         let mut peer_map_lock = self.peer_map.lock().unwrap();
         let disconnected_name = peer_map_lock.remove(&addr).unwrap().1;
-        // TODO: Send updated server state here also
         if let Some(disconnected_name) = disconnected_name {
             self.inner_send_request(ClientRequest {
                 name: disconnected_name.clone(),
