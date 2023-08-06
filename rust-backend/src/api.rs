@@ -9,12 +9,13 @@ pub enum PlayerAction {
     Right,
     Attack,
     Join,
+    Leave,
 }
 
 #[derive(Clone, Debug, PartialEq, Deserialize)]
 pub struct ClientRequest {
-    name: String,
-    action: PlayerAction,
+    pub name: String,
+    pub action: PlayerAction,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize)]
@@ -27,19 +28,19 @@ pub enum ServerResponse<'a> {
 
 #[derive(Clone, Debug, PartialEq, Serialize)]
 pub struct State<'a> {
-    theme: &'a str,
-    players: &'a [Player<'a>],
-    projectiles: &'a [Position],
+    pub theme: &'a str,
+    pub players: &'a [Player<'a>],
+    pub projectiles: &'a [Position],
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Player<'a> {
-    name: &'a str,
-    suffx: &'a str,
-    invincible: bool,
-    facing: Direction,
-    position: Position,
-    health: u32,
+    pub name: &'a str,
+    pub suffx: &'a str,
+    pub invincible: bool,
+    pub facing: Direction,
+    pub position: Position,
+    pub health: u32,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -53,8 +54,8 @@ pub enum Direction {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Position {
-    x: u32,
-    y: u32,
+    pub x: u32,
+    pub y: u32,
 }
 
 #[cfg(test)]
