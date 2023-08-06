@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum PlayerAction {
     Up,
@@ -9,6 +9,7 @@ pub enum PlayerAction {
     Right,
     Attack,
     Join,
+    #[serde(skip)]
     Leave,
 }
 
