@@ -20,12 +20,14 @@ const selectNextUrl = () => {
 const beginGameAtUrl = (url) => {
   var joined = false
   var username = ""
-  const join_button = document.getElementById('join')
+  const joinButton = document.getElementById('join')
+  const usernameField = document.getElementById('username')
+  usernameField.focus()
 
   var socket = new WebSocket(url)
 
   socket.addEventListener("open", (event) => {
-    join_button.disabled = false
+    joinButton.disabled = false
   })
 
   socket.addEventListener('message', (event) => {
@@ -43,8 +45,15 @@ const beginGameAtUrl = (url) => {
         for (const player of state.players) {
           if (player.position.x === x && player.position.y === y) {
             const pct = nameToPct(player.name)
-            img= `../sprites/${state.theme}/player.png`
-            object = `<div><div class="player-color" style="-webkit-mask: url('${img}'); background-color: hsl(${pct} 100% 40%)"><img src="${img}"></img></div></div>` }
+            img= `/sprites/${state.theme}/player.png`
+            object = `
+              <div>
+                <div class="player-color" style="-webkit-mask: url('${img}'); background-color: hsl(${pct} 100% 40%)">
+                  <img src="${img}">
+                   </img>
+                </div>
+              </div>
+          `}
         }
         html += object
       }
@@ -52,8 +61,16 @@ const beginGameAtUrl = (url) => {
     canvas.innerHTML = html
   })
 
-  join_button.addEventListener('click', () => {
-    const value = document.getElementById('username').value
+  usernameField.addEventListener("keypress", function(event) {
+    // If the user presses the "Enter" key on the keyboard
+    if (event.key === "Enter") {
+      event.preventDefault();
+      joinButton.click();
+    }
+  });
+
+  joinButton.addEventListener('click', () => {
+    const value = usernameField.value
     if (value) {
       username = value
       const username_input = document.querySelector(".username-input")
