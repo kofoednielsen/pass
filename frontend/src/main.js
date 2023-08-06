@@ -3,7 +3,7 @@ window.addEventListener("load", function() {
   var username = ""
   const join_button = document.getElementById('join')
 
-  var socket = new WebSocket("ws://localhost:8080/ws")
+  var socket = new WebSocket(`ws://${location.host}/snake`)
 
   socket.addEventListener("open", (event) => {
     join_button.disabled = false
@@ -28,9 +28,9 @@ window.addEventListener("load", function() {
         }
 
         if (object === "nothing") {
-          html += `<img src="/sprites/${state.theme}/${object}.png></img>`
-        } else {
           html += `<div></div>`
+        } else {
+          html += `<img src="/sprites/${state.theme}/${object}.png"></img>`
         }
 
       }

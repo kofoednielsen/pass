@@ -4,9 +4,7 @@ services:
     build:
       context: frontend
     ports: 
-      - '8080:80'
+      - '0.0.0.0:8080:80'
   snake:
     build:
       context: snake
-    ports:
-      - "8081:8080"

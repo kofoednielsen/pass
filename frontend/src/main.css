@@ -19,12 +19,12 @@ button {
 
 #canvas {
   max-width: 400px;
-  background-color: gray;
   margin: auto;
 }
 
-#canvas img {
-    float: left;
-    height: 20px;
-    width: 20px;
+#canvas img, #canvas div {
+  float: left;
+  height: 20px;
+  width: 20px;
+  background-color: lightgray;
 }
