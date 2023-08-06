@@ -13,7 +13,7 @@ extra-source-files:
 
 library
   exposed-modules:
-      Lib
+      Api
   other-modules:
       Paths_heaven
   hs-source-dirs:
