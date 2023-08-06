@@ -2,11 +2,12 @@ use std::{
     collections::HashMap,
     env, eprintln, fmt, io,
     net::SocketAddr,
+    pin::pin,
     sync::{Arc, Mutex},
 };
 
 use futures_channel::mpsc::{unbounded, UnboundedSender};
-use futures_util::{future, pin_mut, stream::TryStreamExt, StreamExt};
+use futures_util::{future, stream::TryStreamExt, StreamExt};
 use rand::{rngs::ThreadRng, thread_rng};
 use tokio::{
     net::{TcpListener, TcpStream},
@@ -65,7 +66,7 @@ use self::snake::GameState;
 
 type Tx = UnboundedSender<Message>;
 
-fn send(tx: &UnboundedSender<Message>, response: &ServerResponse) {
+fn send(tx: &Tx, response: &ServerResponse) {
     let response = serde_json::to_string(response).unwrap();
     tx.unbounded_send(Message::Text(response)).unwrap();
 }
@@ -165,7 +166,7 @@ async fn handle_connection(state: &State, ws_stream: WebSocketStream<TcpStream>,
     state.connect(addr, tx);
     let (outgoing, incoming) = ws_stream.split();
 
-    let broadcast_incoming = incoming.try_for_each(|msg| {
+    let broadcast_incoming = pin!(incoming.try_for_each(|msg| {
         match msg {
             Message::Text(request) => state
                 .request(addr, request)
@@ -176,11 +177,10 @@ async fn handle_connection(state: &State, ws_stream: WebSocketStream<TcpStream>,
         }
 
         future::ok(())
-    });
+    }));
 
-    let receive_from_others = rx.map(Ok).forward(outgoing);
+    let receive_from_others = pin!(rx.map(Ok).forward(outgoing));
 
-    pin_mut!(broadcast_incoming, receive_from_others);
     future::select(broadcast_incoming, receive_from_others).await;
 
     state.disconnect(addr).unwrap_or_else(|e| eprintln!("{e}"))
