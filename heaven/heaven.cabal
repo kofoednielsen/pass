@@ -6,7 +6,7 @@ cabal-version: 1.12
 
 name:           heaven
 version:        0.1.0.0
-description:    Please see the README on GitHub at <https://github.com/githubuser/heaven#readme>
+description:    Please see the README on GitHub at <https://github.com/kofoednielsen/pass/blob/main/heaven#readme>
 build-type:     Simple
 extra-source-files:
     README.md
