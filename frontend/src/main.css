@@ -29,10 +29,6 @@ button {
   background-color: lightgray;
 }
 
-.player-color {
-  isolation: isolate;
-}
-
 .player-color img {
   mix-blend-mode: multiply;
 }

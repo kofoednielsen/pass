@@ -34,7 +34,8 @@ window.addEventListener("load", function() {
         for (const player of state.players) {
           if (player.position.x === x && player.position.y === y) {
             const pct = nameToPct(player.name)
-            object = `<div class="player-color" style="background-color: hsl(${pct} 100% 40%)"><img src="/sprites/${state.theme}/player.png"></img></div>` }
+            img= `/sprites/${state.theme}/player.png`
+            object = `<div><div class="player-color" style="-webkit-mask: url('${img}'); background-color: hsl(${pct} 100% 40%)"><img src="${img}"></img></div></div>` }
         }
         html += object
       }
