@@ -11,6 +11,10 @@ dependencies:
 - base >= 4.7 && < 5
 - text >= 2.0.2
 - websockets >= 0.12.7.3
+- aeson >= 2.1.2.1
+- base-compat >= 0.12.3
+- bytestring >= 0.11.4.0
+- MissingH >= 1.6.0.0
 
 ghc-options:
 - -Wall

@@ -1,52 +1,34 @@
 module Api
-    ( width
-    , height
-    , Position(..)
-    , PlayerAction(..)
-    , Player(..)
-    , ClientRequest(..)
-    , ServerState(..)
-    , ServerResponse(..)
-    ) where
+  ( decode
+  , decodeString
+  , decodeText
+  , encode
+  , encodeString
+  , encodeText
+  ) where
 
+import qualified Data.ByteString.Lazy.Char8 as BL
+import Data.Text (Text)
+import qualified Data.Text as T
 
-width, height :: Int
-width = 20
-height = 20
+import Types
+import qualified Api.ClientRequest as C
+import qualified Api.ServerResponse as S
 
-data Position = Position { x :: Int
-                         , y :: Int
-                         }
-  deriving (Show, Eq)
+decode :: BL.ByteString -> Request
+decode = C.decode
 
-data PlayerAction = Up
-                  | Down
-                  | Left
-                  | Right
-                  | Attack
-                  | Join
-                  | Leave
-  deriving (Show, Eq)
+decodeString :: String -> Request
+decodeString = decode . BL.pack
 
-data Player = Player { playerName :: String
-                     , suffix :: String
-                     , invincible :: Bool
-                     , position :: Position
-                     , health :: Double
-                     }
-  deriving (Show, Eq)
+decodeText :: Text -> Request
+decodeText = decodeString . T.unpack
 
-data ClientRequest = ClientRequest { requestName :: String
-                                   , action :: PlayerAction
-                                   }
-  deriving (Show, Eq)
+encode :: Response -> BL.ByteString
+encode = S.encode
 
-data ServerState = ServerState { theme :: String
-                               , players :: [Player]
-                               , projectiles :: [Position]
-                               }
-  deriving (Show, Eq)
+encodeString :: Response -> String
+encodeString = BL.unpack . encode
 
-data ServerResponse = Switch String
-                    | State ServerState
-  deriving (Show, Eq)
+encodeText :: Response -> Text
+encodeText = T.pack . encodeString

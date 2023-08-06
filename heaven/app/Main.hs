@@ -1,6 +1,5 @@
 module Main (main) where
 
-import Api
 import qualified Server
 
 main :: IO ()
