@@ -4,6 +4,12 @@ pub const WIDTH: i32 = 20;
 pub const HEIGHT: i32 = 20;
 
 #[derive(Clone, Debug, PartialEq, Deserialize)]
+pub struct ClientRequest {
+    pub name: String,
+    pub action: PlayerAction,
+}
+
+#[derive(Clone, Debug, PartialEq, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum PlayerAction {
     Up,
@@ -14,12 +20,6 @@ pub enum PlayerAction {
     Join,
     #[serde(skip)]
     Leave,
-}
-
-#[derive(Clone, Debug, PartialEq, Deserialize)]
-pub struct ClientRequest {
-    pub name: String,
-    pub action: PlayerAction,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize)]
@@ -37,7 +37,7 @@ pub struct ServerState {
     pub projectiles: Vec<Position>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize)]
 pub struct Player {
     pub name: String,
     pub suffx: String,
@@ -47,7 +47,7 @@ pub struct Player {
 }
 
 /// Coordinate space: (0, 0) is top right corner
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize)]
 pub struct Position {
     pub x: i32,
     pub y: i32,

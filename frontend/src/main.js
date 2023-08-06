@@ -8,12 +8,21 @@ const nameToPct = (name) => {
     return hash % 100;
 }
 
-window.addEventListener("load", function() {
+const selectNextUrl = () => {
+  if (location.host) {
+    return `ws://${location.host}/snake`
+  } else {
+    // Allow testing locally when the host is not set (i.e. likely a file system path)
+    return `ws://localhost:8080/ws`
+  }
+}
+
+const beginGameAtUrl = (url) => {
   var joined = false
   var username = ""
   const join_button = document.getElementById('join')
 
-  var socket = new WebSocket(`ws://${location.host}/snake`)
+  var socket = new WebSocket(url)
 
   socket.addEventListener("open", (event) => {
     join_button.disabled = false
@@ -28,13 +37,13 @@ window.addEventListener("load", function() {
         var object = "<div></div>"
         for (const proj of state.projectiles) {
           if (proj.x === x && proj.y === y) {
-            object = `<div><img src="/sprites/${state.theme}/projectile.png"></img></div>`
+            object = `<div><img src="../sprites/${state.theme}/projectile.png"></img></div>`
           }
         }
         for (const player of state.players) {
           if (player.position.x === x && player.position.y === y) {
             const pct = nameToPct(player.name)
-            img= `/sprites/${state.theme}/player.png`
+            img= `../sprites/${state.theme}/player.png`
             object = `<div><div class="player-color" style="-webkit-mask: url('${img}'); background-color: hsl(${pct} 100% 40%)"><img src="${img}"></img></div></div>` }
         }
         html += object
@@ -55,8 +64,8 @@ window.addEventListener("load", function() {
     }
   })
 
-  document.addEventListener('keydown', function(event) {
-      if(event.key && joined) {
+  document.addEventListener('keydown', (event) => {
+      if (event.key && joined) {
         let action = ""
         if (event.key === ' ') {
           action = 'attack'
@@ -75,4 +84,8 @@ window.addEventListener("load", function() {
         }
       }
   })
+}
+
+window.addEventListener("load", () => {
+  beginGameAtUrl(selectNextUrl())
 })
