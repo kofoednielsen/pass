@@ -1,20 +1,63 @@
 use std::{
     collections::HashMap,
-    env,
-    io::Error,
+    env, eprintln, fmt, io,
     net::SocketAddr,
     sync::{Arc, Mutex},
+    time::Duration,
 };
 
 use futures_channel::mpsc::{unbounded, UnboundedSender};
 use futures_util::{future, pin_mut, stream::TryStreamExt, StreamExt};
-use tokio::net::{TcpListener, TcpStream};
+use rand::{rngs::ThreadRng, thread_rng};
+use tokio::{
+    net::{TcpListener, TcpStream},
+    time,
+};
 use tokio_tungstenite::tungstenite::protocol::Message;
 use tokio_tungstenite::{accept_async, WebSocketStream};
 
 mod api;
 mod snake;
+
 use crate::api::{ClientRequest, PlayerAction, ServerResponse};
+
+#[derive(Debug)]
+pub enum Error {
+    PlayerNotFound,
+    JoinOnce,
+    JoinBeforeAction,
+    InvalidInput(serde_json::Error),
+    Io(io::Error),
+}
+
+impl From<serde_json::Error> for Error {
+    fn from(e: serde_json::Error) -> Self {
+        Self::InvalidInput(e)
+    }
+}
+
+impl From<io::Error> for Error {
+    fn from(e: io::Error) -> Self {
+        Self::Io(e)
+    }
+}
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::PlayerNotFound => write!(f, "can't do action on non-existing player"),
+            Self::JoinOnce => write!(f, "can only join once per WebSocket connection"),
+            Self::JoinBeforeAction => write!(
+                f,
+                "you need to join before you can start performing actions"
+            ),
+            Self::InvalidInput(e) => write!(f, "invalid input: {e}"),
+            Self::Io(e) => write!(f, "IO error: {e}"),
+        }
+    }
+}
+
+impl std::error::Error for Error {}
 
 use self::snake::GameState;
 
@@ -33,42 +76,57 @@ struct State {
 
 impl State {
     fn connect(&self, addr: SocketAddr, tx: Tx) {
+        println!("Connect: {addr}");
         let current_state = self.game_state.lock().unwrap().get_state();
         send(&tx, &ServerResponse::State(current_state));
         self.peer_map.lock().unwrap().insert(addr, (tx, None));
     }
 
-    fn request(&self, addr: SocketAddr, request: ClientRequest) -> Result<(), Error> {
-        let mut peer_map_lock = self.peer_map.lock().unwrap();
-        let current_name = &mut peer_map_lock.get_mut(&addr).unwrap().1;
-        match (&request.action, &current_name) {
-            (PlayerAction::Join, Some(_)) => {
-                panic!("can only join once per WebSocket connection")
+    fn request(&self, addr: SocketAddr, request: String) -> Result<(), Error> {
+        println!("Request: {addr}, {request}");
+        let request: ClientRequest = serde_json::from_str(&request)?;
+        {
+            let mut peer_map_lock = self.peer_map.lock().unwrap();
+            let current_name = &mut peer_map_lock.get_mut(&addr).unwrap().1;
+            match (&request.action, &current_name) {
+                (PlayerAction::Join, Some(_)) => {
+                    return Err(Error::JoinOnce);
+                }
+                (PlayerAction::Join, None) => {
+                    *current_name = Some(request.name.clone());
+                }
+                (_, None) => {
+                    return Err(Error::JoinBeforeAction);
+                }
+                (_, Some(_)) => {}
             }
-            (PlayerAction::Join, None) => {
-                *current_name = Some(request.name.clone());
-            }
-            (_, None) => {
-                panic!("you need to join before you can start performing actions")
-            }
-            (_, Some(_)) => {}
         }
-        drop(peer_map_lock);
-        self.inner_send_request(request)
+        self.handle_request(request)?;
+        self.publish_state()
     }
 
-    fn inner_send_request(&self, request: ClientRequest) -> Result<(), Error> {
-        let mut state = self.game_state.lock().unwrap();
-        let switchers = state
-            .handle_request(&request.name, request.action.clone())
-            .unwrap();
-        let server_state = state.get_state();
-        drop(state);
+    fn disconnect(&self, addr: SocketAddr) -> Result<(), Error> {
+        println!("Disconnect: {addr}");
+        let mut peer_map_lock = self.peer_map.lock().unwrap();
+        let disconnected_name = &peer_map_lock.remove(&addr).unwrap().1;
+        if let Some(disconnected_name) = disconnected_name {
+            let name = disconnected_name.clone();
+            drop(peer_map_lock);
+            self.handle_request(ClientRequest {
+                name,
+                action: PlayerAction::Leave,
+            })?;
+            self.publish_state()
+        } else {
+            Ok(())
+        }
+    }
 
-        let response = ServerResponse::State(server_state);
+    fn step(&self, rng: &mut ThreadRng) -> Result<(), Error> {
+        println!("Step");
+        let switchers = self.game_state.lock().unwrap().step(rng);
         let mut peer_map_lock = self.peer_map.lock().unwrap();
         for (recp, peer_name) in peer_map_lock.values_mut() {
-            send(recp, &response);
             if let Some(name) = peer_name {
                 if switchers.contains(&name) {
                     send(recp, &ServerResponse::Switch { name: name.clone() });
@@ -76,43 +134,42 @@ impl State {
                 }
             }
         }
+        drop(peer_map_lock);
+
+        self.publish_state()?;
 
         Ok(())
     }
 
-    fn disconnect(&self, addr: SocketAddr) -> Result<(), Error> {
+    fn handle_request(&self, request: ClientRequest) -> Result<(), Error> {
+        let mut state = self.game_state.lock().unwrap();
+        state.handle_request(&request.name, request.action.clone())
+    }
+
+    fn publish_state(&self) -> Result<(), Error> {
+        let server_state = self.game_state.lock().unwrap().get_state();
+        let response = ServerResponse::State(server_state);
         let mut peer_map_lock = self.peer_map.lock().unwrap();
-        let disconnected_name = peer_map_lock.remove(&addr).unwrap().1;
-        if let Some(disconnected_name) = disconnected_name {
-            drop(peer_map_lock);
-            let name = disconnected_name.clone();
-            self.inner_send_request(ClientRequest {
-                name,
-                action: PlayerAction::Leave,
-            })
-        } else {
-            Ok(())
+        for (recp, _) in peer_map_lock.values_mut() {
+            send(recp, &response);
         }
+
+        Ok(())
     }
 }
 
 async fn handle_connection(state: &State, ws_stream: WebSocketStream<TcpStream>, addr: SocketAddr) {
-    println!("WebSocket connection established: {addr}");
-
     // Insert the write part of this peer to the peer map.
     let (tx, rx) = unbounded();
     state.connect(addr, tx);
     let (outgoing, incoming) = ws_stream.split();
 
     let broadcast_incoming = incoming.try_for_each(|msg| {
-        println!("Received a message from {addr}: {msg:?}");
-
         match msg {
-            Message::Text(request) => {
-                let request: ClientRequest = serde_json::from_str(&request).expect("invalid input");
-                state.request(addr, request).unwrap();
-            }
-            _ => {}
+            Message::Text(request) => state
+                .request(addr, request)
+                .unwrap_or_else(|e| eprintln!("{e}")),
+            _ => eprintln!("unhandled message: {msg:?}"),
         }
 
         future::ok(())
@@ -123,8 +180,7 @@ async fn handle_connection(state: &State, ws_stream: WebSocketStream<TcpStream>,
     pin_mut!(broadcast_incoming, receive_from_others);
     future::select(broadcast_incoming, receive_from_others).await;
 
-    println!("{addr} disconnected");
-    state.disconnect(addr).unwrap()
+    state.disconnect(addr).unwrap_or_else(|e| eprintln!("{e}"))
 }
 
 #[tokio::main]
@@ -137,6 +193,19 @@ async fn main() -> Result<(), Error> {
     println!("Listening on: {addr}");
 
     let state = State::default();
+
+    let state_step = state.clone();
+    tokio::spawn(async move {
+        let mut interval = time::interval(Duration::from_millis(1000));
+
+        loop {
+            interval.tick().await;
+            let mut rng = thread_rng();
+            state_step
+                .step(&mut rng)
+                .unwrap_or_else(|e| eprintln!("{e}"));
+        }
+    });
 
     // Let's spawn the handling of each connection in a separate task.
     while let Ok((tcp_stream, addr)) = listener.accept().await {

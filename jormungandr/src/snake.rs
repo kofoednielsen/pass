@@ -1,21 +1,12 @@
+use rand::Rng;
 use std::collections::hash_map::Entry;
 use std::collections::{HashMap, VecDeque};
-use std::fmt;
 
 use crate::api::{Player, PlayerAction, Position, ServerState};
+use crate::Error;
 
-#[derive(Clone, Debug, PartialEq)]
-pub struct Error {
-    msg: &'static str,
-}
-
-impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(self.msg)
-    }
-}
-
-impl std::error::Error for Error {}
+const WIDTH: i32 = 20;
+const HEIGHT: i32 = 20;
 
 #[derive(Clone, Debug, PartialEq)]
 struct PlayerData {
@@ -23,7 +14,9 @@ struct PlayerData {
     tail: VecDeque<Position>,
     /// (x, y)
     /// Coordinate space: (0, 0) is top right corner
-    velocity: (i8, i8),
+    ///
+    /// TODO: Maybe implement this as a queue of last keypresses, for better feel?
+    velocity: (i32, i32),
     client_count: usize,
 }
 
@@ -34,13 +27,8 @@ pub struct GameState {
 }
 
 impl GameState {
-    pub fn handle_request(
-        &mut self,
-        name: &str,
-        action: PlayerAction,
-    ) -> Result<Vec<String>, Error> {
+    pub fn handle_request(&mut self, name: &str, action: PlayerAction) -> Result<(), Error> {
         let player = self.players.entry(name.to_string());
-        let mut switchers = vec![];
         match (player, action) {
             (Entry::Occupied(mut player), PlayerAction::Join) => {
                 // Explicitly allow two clients to be logged in as the same
@@ -49,7 +37,7 @@ impl GameState {
             }
             (Entry::Occupied(mut player), PlayerAction::Leave) => {
                 player.get_mut().client_count -= 1;
-                // Do not add players to switchers here, they know it themselves...
+                // Do not add players to `switchers` here, they know it themselves...
             }
             (Entry::Vacant(player), PlayerAction::Join) => {
                 // TODO: Find the least populated spot on the map
@@ -78,36 +66,33 @@ impl GameState {
                 player.get_mut().velocity = (1, 0);
             }
             (Entry::Occupied(_), PlayerAction::Attack) => {
-                switchers.extend(self.step());
                 // Intentionally do nothing for now
             }
             (Entry::Vacant(_), _) => {
-                return Err(Error {
-                    msg: "can't do action on non-existing player",
-                });
+                return Err(Error::PlayerNotFound);
             }
         }
 
-        Ok(switchers)
+        Ok(())
     }
 
-    pub fn step(&mut self) -> Vec<String> {
+    pub fn step(&mut self, rng: &mut impl Rng) -> Vec<String> {
         // Move all players, and create tail in their place
         for player in self.players.values_mut() {
             if player.velocity == (0, 0) {
                 continue;
             }
             if let Some(tail_front) = player.tail.front() {
-                let x = (player.position.x as i32 + player.velocity.0 as i32) as u32;
-                let y = (player.position.y as i32 + player.velocity.1 as i32) as u32;
+                let x = player.position.x + player.velocity.0;
+                let y = player.position.y + player.velocity.1;
                 // Walk the opposite direction if we were about to _directly_ eat ourselves
                 if tail_front.x == x && tail_front.y == y {
                     player.velocity = (-player.velocity.0, -player.velocity.1);
                 }
             }
             player.tail.push_front(player.position.clone());
-            player.position.x = (player.position.x as i32 + player.velocity.0 as i32) as u32;
-            player.position.y = (player.position.y as i32 + player.velocity.1 as i32) as u32;
+            player.position.x += player.velocity.0;
+            player.position.y += player.velocity.1;
         }
 
         // Check player to player collisions
@@ -150,6 +135,12 @@ impl GameState {
 
         if apple_eaten {
             self.current_apple = None;
+        }
+
+        if self.current_apple.is_none() {
+            let x = rng.gen_range(0..WIDTH);
+            let y = rng.gen_range(0..HEIGHT);
+            self.current_apple = Some(Position { x, y });
         }
 
         dead_players
