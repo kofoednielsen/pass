@@ -22,22 +22,22 @@ pub struct ClientRequest {
 #[derive(Clone, Debug, PartialEq, Serialize)]
 #[serde(rename_all = "lowercase")]
 #[serde(tag = "event")]
-pub enum ServerResponse<'a> {
+pub enum ServerResponse {
     Switch,
-    State(State<'a>),
+    State(ServerState),
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize)]
-pub struct State<'a> {
-    pub theme: &'a str,
-    pub players: &'a [Player<'a>],
-    pub projectiles: &'a [Position],
+pub struct ServerState {
+    pub theme: &'static str,
+    pub players: Vec<Player>,
+    pub projectiles: Vec<Position>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-pub struct Player<'a> {
-    pub name: &'a str,
-    pub suffx: &'a str,
+pub struct Player {
+    pub name: String,
+    pub suffx: String,
     pub invincible: bool,
     pub facing: Direction,
     pub position: Position,
@@ -108,17 +108,17 @@ mod tests {
                 { "x": 20, "y": 10 },
             ]
         });
-        let request = ServerResponse::State(State {
+        let request = ServerResponse::State(ServerState {
             theme: "snake",
-            players: &[Player {
-                name: "abc",
-                suffx: "the destroyer",
+            players: vec![Player {
+                name: "abc".into(),
+                suffx: "the destroyer".into(),
                 invincible: true,
                 facing: Direction::Right,
                 position: Position { x: 10, y: 20 },
                 health: 10,
             }],
-            projectiles: &[Position { x: 10, y: 20 }, Position { x: 20, y: 10 }],
+            projectiles: vec![Position { x: 10, y: 20 }, Position { x: 20, y: 10 }],
         });
 
         assert_eq!(value, to_value(request).unwrap());

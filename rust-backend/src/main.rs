@@ -11,6 +11,8 @@ use std::{
     sync::{Arc, Mutex},
 };
 
+use futures_channel::mpsc::{unbounded, UnboundedSender};
+use futures_util::{future, pin_mut, stream::TryStreamExt, StreamExt};
 use hyper::{
     header::{
         HeaderValue, CONNECTION, SEC_WEBSOCKET_ACCEPT, SEC_WEBSOCKET_KEY, SEC_WEBSOCKET_VERSION,
@@ -21,20 +23,29 @@ use hyper::{
     upgrade::Upgraded,
     Body, Method, Request, Response, Server, StatusCode, Version,
 };
-
-use futures_channel::mpsc::{unbounded, UnboundedSender};
-use futures_util::{future, pin_mut, stream::TryStreamExt, StreamExt};
-
 use tokio_tungstenite::tungstenite::{
     handshake::derive_accept_key,
     protocol::{Message, Role},
 };
 use tokio_tungstenite::WebSocketStream;
 
+mod api;
+mod snake;
+use crate::api::{ClientRequest, PlayerAction, ServerResponse};
+
+use self::snake::GameState;
+
 type Tx = UnboundedSender<Message>;
-type PeerMap = Arc<Mutex<HashMap<SocketAddr, Tx>>>;
+type PeerMap = Arc<Mutex<HashMap<SocketAddr, (Tx, Option<String>)>>>;
+type State = Arc<Mutex<GameState>>;
+
+fn send(tx: &UnboundedSender<Message>, response: &ServerResponse) {
+    let response = serde_json::to_string(response).unwrap();
+    tx.unbounded_send(Message::Text(response)).unwrap();
+}
 
 async fn handle_connection(
+    state: State,
     peer_map: PeerMap,
     ws_stream: WebSocketStream<Upgraded>,
     addr: SocketAddr,
@@ -43,22 +54,50 @@ async fn handle_connection(
 
     // Insert the write part of this peer to the peer map.
     let (tx, rx) = unbounded();
-    peer_map.lock().unwrap().insert(addr, tx);
+
+    send(&tx, &ServerResponse::State(state.lock().unwrap().poll()));
+
+    peer_map.lock().unwrap().insert(addr, (tx, None));
 
     let (outgoing, incoming) = ws_stream.split();
 
     let broadcast_incoming = incoming.try_for_each(|msg| {
         println!("Received a message from {addr}: {msg:?}");
-        let peers = peer_map.lock().unwrap();
 
-        // We want to broadcast the message to everyone except ourselves.
-        let broadcast_recipients = peers
-            .iter()
-            .filter(|(peer_addr, _)| peer_addr != &&addr)
-            .map(|(_, ws_sink)| ws_sink);
+        match msg {
+            Message::Text(request) => {
+                let mut peer_map_lock = peer_map.lock().unwrap();
+                let current_name = &mut peer_map_lock.get_mut(&addr).unwrap().1;
+                let request: ClientRequest = serde_json::from_str(&request).expect("invalid input");
+                match (&request.action, &current_name) {
+                    (PlayerAction::Join, Some(_)) => {
+                        panic!("can only join once per WebSocket connection")
+                    }
+                    (PlayerAction::Join, None) => {
+                        *current_name = Some(request.name.clone());
+                    }
+                    (_, None) => {
+                        panic!("you need to join before you can start performing actions")
+                    }
+                    (_, Some(_)) => {}
+                }
+                let mut state = state.lock().unwrap();
+                let (server_state, switchers) = state
+                    .handle_request(&request.name, request.action.clone())
+                    .unwrap();
+                drop(state);
 
-        for recp in broadcast_recipients {
-            recp.unbounded_send(msg.clone()).unwrap();
+                let response = ServerResponse::State(server_state);
+                for (recp, name) in peer_map_lock.values() {
+                    send(recp, &response);
+                    if let Some(name) = name {
+                        if switchers.contains(&name) {
+                            send(recp, &ServerResponse::Switch)
+                        }
+                    }
+                }
+            }
+            _ => {}
         }
 
         future::ok(())
@@ -74,6 +113,7 @@ async fn handle_connection(
 }
 
 async fn handle_request(
+    state: State,
     peer_map: PeerMap,
     mut req: Request<Body>,
     addr: SocketAddr,
@@ -118,6 +158,7 @@ async fn handle_request(
         match hyper::upgrade::on(&mut req).await {
             Ok(upgraded) => {
                 handle_connection(
+                    state,
                     peer_map,
                     WebSocketStream::from_raw_socket(upgraded, Role::Server, None).await,
                     addr,
@@ -139,7 +180,8 @@ async fn handle_request(
 
 #[tokio::main]
 async fn main() -> Result<(), hyper::Error> {
-    let peer_map = PeerMap::new(Mutex::new(HashMap::new()));
+    let state = State::default();
+    let peer_map = PeerMap::default();
 
     let addr = env::args()
         .nth(1)
@@ -149,8 +191,11 @@ async fn main() -> Result<(), hyper::Error> {
 
     let make_svc = make_service_fn(move |conn: &AddrStream| {
         let remote_addr = conn.remote_addr();
+        let state = state.clone();
         let peer_map = peer_map.clone();
-        let service = service_fn(move |req| handle_request(peer_map.clone(), req, remote_addr));
+        let service = service_fn(move |req| {
+            handle_request(state.clone(), peer_map.clone(), req, remote_addr)
+        });
         async { Ok::<_, Infallible>(service) }
     });
 
