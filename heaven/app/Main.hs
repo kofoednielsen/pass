@@ -1,6 +1,7 @@
 module Main (main) where
 
 import Api
+import qualified Server
 
 main :: IO ()
-main = putStrLn "test"
+main = Server.main
