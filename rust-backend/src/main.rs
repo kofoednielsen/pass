@@ -149,7 +149,7 @@ async fn handle_request(
             .map(|h| h == "13")
             .unwrap_or(false)
         || key.is_none()
-        || req.uri() != "/socket"
+        || req.uri() != "/ws"
     {
         return Ok(Response::new(Body::from("Hello World!")));
     }

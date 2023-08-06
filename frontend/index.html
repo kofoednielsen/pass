@@ -25,9 +25,10 @@
       }
       joined = true
       console.log({name: username, action: 'join'});
+      socket.send(JSON.stringify({name: username, action: 'join'}));
     }
   }
-  // var socket = new WebSocket("ws://localhost:8080/ws");
+  var socket = new WebSocket("ws://localhost:8080/ws");
   document.addEventListener('keydown', function(event) {
       if(event.key && joined) {
         let action = ""
@@ -42,53 +43,36 @@
         } else if (event.key == 'ArrowRight' || event.key == 'd') {
           action = 'right'
         }
-        //socket.send({name: username, action});
         if (action) {
           console.log({name: username, action});
+          socket.send(JSON.stringify({name: username, action}));
         }
       }
   });
   window.addEventListener("load", function() {
-      // create websocket instance
-      let state = {
-        "event": "state",
-        "theme": "heaven/hell",
-        "players": [
-          {
-             "name": "abc",
-             "suffx": "the destroyer",
-             "invincible": true,
-             "facing": "down",
-             "position": { "x": 2, "y": 2 },
-             "health": 10,
-          }
-        ],
-        "projectiles": [
-          { "x": 5, "y":7 },
-          { "x": 7, "y": 3 }
-        ]
-      } 
       // add event listener reacting when message is received
-      //socket.onmessage = function (event) {
-      const canvas = document.getElementById("canvas")
-      console.log(canvas)
-      for (let y = 0; y < 20; y++) {
-        for (let x = 0; x < 20; x++) {
-          var color = "black"
-          for (const proj of state.projectiles) {
-            if (proj.x === x && proj.y === y) {
-              color = "red"
+      socket.onmessage = function (event) {
+        const state = JSON.parse(event.data)
+        const canvas = document.getElementById("canvas")
+        let html = ""
+        for (let y = 0; y < 20; y++) {
+          for (let x = 0; x < 20; x++) {
+            var color = "black"
+            for (const proj of state.projectiles) {
+              if (proj.x === x && proj.y === y) {
+                color = "red"
+              }
             }
-          }
-          for (const player of state.players) {
-            if (player.position.x === x && player.position.y === y) {
-              color = "blue"
+            for (const player of state.players) {
+              if (player.position.x === x && player.position.y === y) {
+                color = "blue"
+              }
             }
+            html += `<div style="float: left; height: 20px; width: 20px; background-color: ${color}"></div>`
           }
-          canvas.innerHTML += `<div style="float: left; height: 20px; width: 20px; background-color: ${color}"/>`
         }
-      }
-      //};
+        canvas.innerHTML = html
+      };
       //form[0].addEventListener("submit", function (e) {
       //    // on forms submission send input to our server
       //    input_text = input.value;

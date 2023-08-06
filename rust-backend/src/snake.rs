@@ -25,10 +25,10 @@ impl GameState {
             suffx: "the destroyer".into(),
             invincible: true,
             facing: Direction::Right,
-            position: Position { x: 10, y: 20 },
+            position: Position { x: 10, y: 10 },
             health: 10,
         }];
-        let projectiles = vec![Position { x: 10, y: 20 }, Position { x: 20, y: 10 }];
+        let projectiles = vec![Position { x: 10, y: 11 }, Position { x: 11, y: 10 }];
 
         ServerState {
             theme: "snake",
