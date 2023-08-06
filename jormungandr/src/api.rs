@@ -40,7 +40,7 @@ pub struct Player {
     pub suffx: String,
     pub invincible: bool,
     pub position: Position,
-    pub health: u32,
+    pub health: f32,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -90,7 +90,7 @@ mod tests {
                     "suffx": "the destroyer",
                     "invincible": true,
                     "position": { "x": 10, "y": 20 },
-                    "health": 10,
+                    "health": 0.4,
                 },
             ],
             "projectiles": [
@@ -105,7 +105,7 @@ mod tests {
                 suffx: "the destroyer".into(),
                 invincible: true,
                 position: Position { x: 10, y: 20 },
-                health: 10,
+                health: 0.4,
             }],
             projectiles: vec![Position { x: 10, y: 20 }, Position { x: 20, y: 10 }],
         });

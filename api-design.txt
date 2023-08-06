@@ -30,7 +30,7 @@ eller
        suffx: 'the destroyer',
        invincible: true/false,
        position: { x: 10, y: 20 },
-       health: 10,
+       health: 0.0 to 1.0,
     }
   ],
   projectiles: [

@@ -58,9 +58,10 @@ impl State {
 
     fn inner_send_request(&self, request: ClientRequest) -> Result<(), Error> {
         let mut state = self.game_state.lock().unwrap();
-        let (server_state, switchers) = state
+        let switchers = state
             .handle_request(&request.name, request.action.clone())
             .unwrap();
+        let server_state = state.get_state();
         drop(state);
 
         let response = ServerResponse::State(server_state);
