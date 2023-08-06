@@ -170,6 +170,8 @@ async fn handle_connection(state: &State, ws_stream: WebSocketStream<TcpStream>,
             Message::Text(request) => state
                 .request(addr, request)
                 .unwrap_or_else(|e| eprintln!("{e}")),
+            // Skip; instead only close once the connection itself shuts down
+            Message::Close(_) => {}
             _ => eprintln!("unhandled message: {msg:?}"),
         }
 
