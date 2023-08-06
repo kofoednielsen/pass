@@ -18,19 +18,12 @@ impl fmt::Display for Error {
 impl std::error::Error for Error {}
 
 #[derive(Clone, Debug, PartialEq)]
-enum Direction {
-    Up,
-    Down,
-    Left,
-    Right,
-}
-
-#[derive(Clone, Debug, PartialEq)]
 struct PlayerData {
     position: Position,
     tail: VecDeque<Position>,
-    /// The last arrow key that the user pressed.
-    desired_direction: Direction,
+    /// (x, y)
+    /// Coordinate space: (0, 0) is top right corner
+    velocity: (i8, i8),
     client_count: usize,
 }
 
@@ -47,7 +40,7 @@ impl GameState {
         action: PlayerAction,
     ) -> Result<Vec<String>, Error> {
         let player = self.players.entry(name.to_string());
-        let switchers = vec![];
+        let mut switchers = vec![];
         match (player, action) {
             (Entry::Occupied(mut player), PlayerAction::Join) => {
                 // Explicitly allow two clients to be logged in as the same
@@ -64,8 +57,8 @@ impl GameState {
                 player.insert(PlayerData {
                     position: starting_position,
                     tail: VecDeque::new(),
-                    // Just pick some sensible default
-                    desired_direction: Direction::Down,
+                    // Start by standing still?
+                    velocity: (0, 0),
                     client_count: 1,
                 });
             }
@@ -73,18 +66,19 @@ impl GameState {
                 eprintln!("WARN: Somehow player {name} left without it being in the state");
             }
             (Entry::Occupied(mut player), PlayerAction::Up) => {
-                player.get_mut().desired_direction = Direction::Up;
+                player.get_mut().velocity = (0, -1);
             }
             (Entry::Occupied(mut player), PlayerAction::Down) => {
-                player.get_mut().desired_direction = Direction::Down;
+                player.get_mut().velocity = (0, 1);
             }
             (Entry::Occupied(mut player), PlayerAction::Left) => {
-                player.get_mut().desired_direction = Direction::Left;
+                player.get_mut().velocity = (-1, 0);
             }
             (Entry::Occupied(mut player), PlayerAction::Right) => {
-                player.get_mut().desired_direction = Direction::Right;
+                player.get_mut().velocity = (1, 0);
             }
             (Entry::Occupied(_), PlayerAction::Attack) => {
+                switchers.extend(self.step());
                 // Intentionally do nothing for now
             }
             (Entry::Vacant(_), _) => {
@@ -100,32 +94,38 @@ impl GameState {
     pub fn step(&mut self) -> Vec<String> {
         // Move all players, and create tail in their place
         for player in self.players.values_mut() {
-            player.tail.push_front(player.position.clone());
-            match player.desired_direction {
-                // Coordinate space: (0, 0) is top right corner
-                Direction::Up => {
-                    player.position.y -= 1;
-                }
-                Direction::Down => {
-                    player.position.y += 1;
-                }
-                Direction::Left => {
-                    player.position.x -= 1;
-                }
-                Direction::Right => {
-                    player.position.x += 1;
+            if player.velocity == (0, 0) {
+                continue;
+            }
+            if let Some(tail_front) = player.tail.front() {
+                let x = (player.position.x as i32 + player.velocity.0 as i32) as u32;
+                let y = (player.position.y as i32 + player.velocity.1 as i32) as u32;
+                // Walk the opposite direction if we were about to _directly_ eat ourselves
+                if tail_front.x == x && tail_front.y == y {
+                    player.velocity = (-player.velocity.0, -player.velocity.1);
                 }
             }
+            player.tail.push_front(player.position.clone());
+            player.position.x = (player.position.x as i32 + player.velocity.0 as i32) as u32;
+            player.position.y = (player.position.y as i32 + player.velocity.1 as i32) as u32;
         }
 
         // Check player to player collisions
+        //
+        // Explicitly made this way so that players colliding head on still die.
         let mut dead_players = Vec::new();
         for (name, player) in self.players.iter() {
-            for other_player in self.players.values() {
-                if player.position == other_player.position
-                    || other_player.tail.contains(&player.position)
-                {
-                    dead_players.push(name.to_string());
+            for (other_name, other_player) in self.players.iter() {
+                let head_hit = player.position == other_player.position;
+                let tail_hit = other_player.tail.contains(&player.position);
+                if name == other_name {
+                    if tail_hit {
+                        dead_players.push(name.to_string());
+                    }
+                } else {
+                    if head_hit || tail_hit {
+                        dead_players.push(name.to_string());
+                    }
                 }
             }
         }
