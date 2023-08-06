@@ -65,12 +65,12 @@ impl State {
 
         let response = ServerResponse::State(server_state);
         let mut peer_map_lock = self.peer_map.lock().unwrap();
-        for (recp, name) in peer_map_lock.values_mut() {
+        for (recp, peer_name) in peer_map_lock.values_mut() {
             send(recp, &response);
-            if let Some(some_name) = name {
-                if switchers.contains(&some_name) {
-                    *name = None;
-                    send(recp, &ServerResponse::Switch)
+            if let Some(name) = peer_name {
+                if switchers.contains(&name) {
+                    send(recp, &ServerResponse::Switch { name: name.clone() });
+                    *peer_name = None;
                 }
             }
         }

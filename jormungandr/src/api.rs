@@ -23,7 +23,7 @@ pub struct ClientRequest {
 #[serde(rename_all = "lowercase")]
 #[serde(tag = "event")]
 pub enum ServerResponse {
-    Switch,
+    Switch { name: String },
     State(ServerState),
 }
 
@@ -39,18 +39,8 @@ pub struct Player {
     pub name: String,
     pub suffx: String,
     pub invincible: bool,
-    pub facing: Direction,
     pub position: Position,
     pub health: u32,
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "lowercase")]
-pub enum Direction {
-    Up,
-    Down,
-    Left,
-    Right,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -82,8 +72,9 @@ mod tests {
     fn test_response_switch() {
         let value = json!({
             "event": "switch",
+            "name": "abc",
         });
-        let request = ServerResponse::Switch;
+        let request = ServerResponse::Switch { name: "abc".into() };
 
         assert_eq!(value, to_value(request).unwrap());
     }
@@ -98,7 +89,6 @@ mod tests {
                     "name": "abc",
                     "suffx": "the destroyer",
                     "invincible": true,
-                    "facing": "right",
                     "position": { "x": 10, "y": 20 },
                     "health": 10,
                 },
@@ -114,7 +104,6 @@ mod tests {
                 name: "abc".into(),
                 suffx: "the destroyer".into(),
                 invincible: true,
-                facing: Direction::Right,
                 position: Position { x: 10, y: 20 },
                 health: 10,
             }],

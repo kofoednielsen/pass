@@ -7,35 +7,35 @@ JSON:
 KLIENT SENDER:
 
 {
-  name: 'abc'
-  action: ['up', 'down', 'left', 'right', 'attack', 'join'(first action end after new conncetion)]
+  name: 'abc',
+  action: ['up', 'down', 'left', 'right', 'attack', 'join'(first action end after new conncetion)],
 }
 
 
 SERVER SENDER:
 
 {
-  event: 'switch'
+  event: 'switch',
+  name: 'abc',
 }
 
 eller
 
 {
-  event: 'state'
-  theme: 'heaven/hell'
+  event: 'state',
+  theme: 'heaven/hell',
   players: [
     {
-       name: 'abc'
-       suffx: 'the destroyer'
-       invincible: true/false
-       facing: ['up', 'down', 'left', 'right']
-       position: { x: 10, y: 20 }
-       health: 10
+       name: 'abc',
+       suffx: 'the destroyer',
+       invincible: true/false,
+       position: { x: 10, y: 20 },
+       health: 10,
     }
-  ]
+  ],
   projectiles: [
-    { x: 10, y:20 }
-    { x: 20, y: 10 }
-  ]
+    { x: 10, y: 20 },
+    { x: 20, y: 10 },
+  ],
 }
 

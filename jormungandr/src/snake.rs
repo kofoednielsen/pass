@@ -1,4 +1,4 @@
-use crate::api::{Direction, Player, PlayerAction, Position, ServerState};
+use crate::api::{Player, PlayerAction, Position, ServerState};
 
 use std::io::Error;
 
@@ -24,7 +24,6 @@ impl GameState {
             name: "abc".into(),
             suffx: "the destroyer".into(),
             invincible: true,
-            facing: Direction::Right,
             position: Position { x: 10, y: 10 },
             health: 10,
         }];
