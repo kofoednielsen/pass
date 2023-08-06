@@ -1,0 +1,42 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.35.2.
+--
+-- see: https://github.com/sol/hpack
+
+name:           heaven
+version:        0.1.0.0
+description:    Please see the README on GitHub at <https://github.com/githubuser/heaven#readme>
+build-type:     Simple
+extra-source-files:
+    README.md
+
+library
+  exposed-modules:
+      Lib
+  other-modules:
+      Paths_heaven
+  hs-source-dirs:
+      src
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
+  pkgconfig-depends:
+      zlib
+  build-depends:
+      base >=4.7 && <5
+    , websockets >=0.12.7.3
+  default-language: Haskell2010
+
+executable heaven
+  main-is: Main.hs
+  other-modules:
+      Paths_heaven
+  hs-source-dirs:
+      app
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  pkgconfig-depends:
+      zlib
+  build-depends:
+      base >=4.7 && <5
+    , heaven
+    , websockets >=0.12.7.3
+  default-language: Haskell2010
