@@ -15,18 +15,24 @@ window.addEventListener("load", function() {
     let html = ""
     for (let y = 0; y < 20; y++) {
       for (let x = 0; x < 20; x++) {
-        var color = "black"
+        var object = "nothing"
         for (const proj of state.projectiles) {
           if (proj.x === x && proj.y === y) {
-            color = "red"
+            object = "projectile"
           }
         }
         for (const player of state.players) {
           if (player.position.x === x && player.position.y === y) {
-            color = "blue"
+            object = "player"
           }
         }
-        html += `<div style="background-color: ${color}"></div>`
+
+        if (object === "nothing") {
+          html += `<img src="/sprites/${state.theme}/${object}.png></img>`
+        } else {
+          html += `<div></div>`
+        }
+
       }
     }
     canvas.innerHTML = html
@@ -43,12 +49,6 @@ window.addEventListener("load", function() {
       socket.send(JSON.stringify({name: username, action: 'join'}))
     }
   })
-  //form[0].addEventListener("submit", function (e) {
-  //    // on forms submission send input to our server
-  //    input_text = input.value
-  //    socket.send(input_text)
-  //    e.preventDefault()
-  //})
 
   document.addEventListener('keydown', function(event) {
       if(event.key && joined) {
