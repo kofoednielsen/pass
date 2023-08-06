@@ -1,4 +1,4 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -20,22 +20,22 @@ pub struct ClientRequest {
 #[derive(Clone, Debug, PartialEq, Serialize)]
 #[serde(rename_all = "lowercase")]
 #[serde(tag = "event")]
-pub enum ServerResponse {
+pub enum ServerResponse<'a> {
     Switch,
-    State(GameState),
+    State(State<'a>),
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize)]
-pub struct GameState {
-    theme: &'static str,
-    players: Vec<Player>,
-    projectiles: Vec<Position>,
+pub struct State<'a> {
+    theme: &'a str,
+    players: &'a [Player<'a>],
+    projectiles: &'a [Position],
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-pub struct Player {
-    name: String,
-    suffx: String,
+pub struct Player<'a> {
+    name: &'a str,
+    suffx: &'a str,
     invincible: bool,
     facing: Direction,
     position: Position,
@@ -57,10 +57,10 @@ pub struct Position {
     y: u32,
 }
 
-#[cfg(tests)]
+#[cfg(test)]
 mod tests {
-    use serde_json::{from_value, to_value, json};
     use super::*;
+    use serde_json::{from_value, json, to_value};
 
     #[test]
     fn test_request() {
@@ -73,7 +73,7 @@ mod tests {
             action: PlayerAction::Up,
         };
 
-        assert_eq!(from_value(value), Ok(request));
+        assert_eq!(from_value::<ClientRequest>(value).unwrap(), request);
     }
 
     #[test]
@@ -83,7 +83,7 @@ mod tests {
         });
         let request = ServerResponse::Switch;
 
-        assert_eq!(Ok(value), to_value(request));
+        assert_eq!(value, to_value(request).unwrap());
     }
 
     #[test]
@@ -106,24 +106,19 @@ mod tests {
                 { "x": 20, "y": 10 },
             ]
         });
-        let request = ServerResponse::State(GameState {
+        let request = ServerResponse::State(State {
             theme: "snake",
-            players: vec![
-                Player {
-                    name: "abc".into(),
-                    suffx: "the destroyer".into(),
-                    invincible: true,
-                    facing: Direction::Right,
-                    position: Position { x: 10, y: 20 },
-                    health: 10,
-                }
-            ],
-            projectiles: vec![
-                Position { x: 10, y: 20 },
-                Position { x: 20, y: 10 },
-            ],
+            players: &[Player {
+                name: "abc",
+                suffx: "the destroyer",
+                invincible: true,
+                facing: Direction::Right,
+                position: Position { x: 10, y: 20 },
+                health: 10,
+            }],
+            projectiles: &[Position { x: 10, y: 20 }, Position { x: 20, y: 10 }],
         });
 
-        assert_eq!(Ok(value), to_value(request));
+        assert_eq!(value, to_value(request).unwrap());
     }
 }
