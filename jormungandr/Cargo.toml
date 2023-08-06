@@ -7,8 +7,7 @@ publish = false
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-tokio-tungstenite = "0.19"
+tokio-tungstenite = "0.20"
 tokio = { version = "1.29", features = ["macros", "net", "rt-multi-thread", "time"] }
 futures-util = { version = "0.3.28", default-features = false, features = ["sink", "std"] }
-hyper = { version = "0.14.25", default-features = false, features = ["http1", "server", "tcp"] }
 futures-channel = "0.3.28"

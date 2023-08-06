@@ -15,8 +15,8 @@ impl GameState {
         Ok((self.get_state(), vec![]))
     }
 
-    pub fn poll(&self) -> ServerState {
-        self.get_state()
+    pub fn poll(&self) -> Option<ServerState> {
+        None
     }
 
     pub fn get_state(&self) -> ServerState {
