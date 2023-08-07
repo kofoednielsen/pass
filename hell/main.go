@@ -96,6 +96,7 @@ func handleReads(conn *websocket.Conn) {
 		err := conn.ReadJSON(&req)
 		if err != nil {
 			log.Printf("Client sent unexpected message: %v\n", err)
+			return
 		}
 		game.in <- req
 	}
@@ -106,6 +107,7 @@ func handleWrites(conn *websocket.Conn, resChan chan stateResponse) {
 		err := conn.WriteJSON(&res)
 		if err != nil {
 			log.Printf("Client didn't receive message: %v\n", err)
+			return
 		}
 	}
 }
