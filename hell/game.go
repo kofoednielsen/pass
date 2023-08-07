@@ -36,7 +36,7 @@ type player struct {
 	Invincible bool     `json:"invincible"`
 	Pos        position `json:"position"`
 	Health     float64  `json:"health"`
-	quit       chan struct{}
+	quit       chan bool
 	out        chan stateResponse
 	birthday   time.Time
 }
@@ -60,7 +60,7 @@ func newHell() *hell {
 	}
 }
 
-func (h *hell) addPlayer(name string, quit chan struct{}) chan stateResponse {
+func (h *hell) addPlayer(name string, quit chan bool) chan stateResponse {
 	player := player{
 		Health:     1.0,
 		Invincible: true,
@@ -128,7 +128,9 @@ func (h *hell) updateFromInput() {
 			case "join":
 				log.Printf("Player \"%s\" sent join after already joining\n", p.Name)
 			default:
-				log.Printf("Player \"%s\" sent join unknown action \"%s\"\n", p.Name, req.Action)
+				log.Printf("Player \"%s\" sent unknown action \"%s\"\n", p.Name, req.Action)
+				p.quit <- false
+				delete(h.players, p.Name)
 			}
 			h.players[req.Name] = p
 		default:
@@ -152,6 +154,6 @@ func (h *hell) dealDamage(pos position) {
 }
 
 func (h *hell) kill(p string) {
-	h.players[p].quit <- struct{}{}
+	h.players[p].quit <- true
 	delete(h.players, p)
 }

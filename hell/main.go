@@ -68,21 +68,23 @@ func hellHandler(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Error reading from websocket: %s", err)
 		return
 	}
-	quit := make(chan struct{})
+	quit := make(chan bool)
 	resChan := game.addPlayer(req.Name, quit)
 	log.Println("Player added")
 
 	go handleReads(conn)
 	go handleWrites(conn, resChan)
-	<-quit
-	res := switchResponse{
-		Event: "switch",
-		Name:  req.Name,
-	}
-	err = conn.WriteJSON(&res)
-	if err != nil {
-		log.Println(err)
-		return
+
+	if <-quit {
+		res := switchResponse{
+			Event: "switch",
+			Name:  req.Name,
+		}
+		err = conn.WriteJSON(&res)
+		if err != nil {
+			log.Println(err)
+			return
+		}
 	}
 
 	return
