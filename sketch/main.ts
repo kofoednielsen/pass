@@ -185,7 +185,7 @@ function handle(socket: WebSocket, addr: Deno.Addr) {
   socket.onerror = (e) => console.error(`WebSocket error: ${e}`)
 }
 
-const listener = Deno.listen({ port: 8080 })
+const listener = Deno.listen({ port: 80 })
 
 console.info(`Listening on: ${addr_to_string(listener.addr)}`)
 

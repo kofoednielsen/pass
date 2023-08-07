@@ -26,7 +26,7 @@ type stateResponse struct {
 	Projectiles []position `json:"projectiles"`
 }
 
-const port = 8080
+const port = 80
 
 var game *hell
 
