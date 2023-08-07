@@ -1,3 +1,9 @@
+const width = 20
+const height = 20
+
+// Enabled when the hostname is not set, i.e. likely a file system path
+const isDev = !location.host
+
 const nameToPct = (name) => {
     var hash = 0, i, chr;
     for (i = 0; i < name.length; i++) {
@@ -9,12 +15,13 @@ const nameToPct = (name) => {
 }
 
 const selectNextUrl = () => {
-  if (location.host) {
-    return `ws://${location.host}/snake`
-  } else {
-    // Allow testing locally when the host is not set (i.e. likely a file system path)
+  if (isDev) {
     return `ws://localhost:8080/ws`
   }
+
+  const theme = knownThemes[0]
+
+  return `ws://${location.host}/${theme}`
 }
 
 // First one here will be the fallback theme
@@ -26,6 +33,10 @@ const beginGameAtUrl = (url) => {
   const joinButton = document.getElementById('join')
   const usernameField = document.getElementById('username')
   usernameField.focus()
+
+  const canvas = document.getElementById('canvas')
+  canvas.style.gridTemplateColumns = `repeat(${width}, 20px)`
+  canvas.style.gridTemplateRows = `repeat(${height}, 20px)`
 
   var socket = new WebSocket(url)
 
@@ -41,24 +52,30 @@ const beginGameAtUrl = (url) => {
     } else {
       theme = state.theme
     }
-    const canvas = document.getElementById('canvas')
     canvas.className = `theme-${theme}`
-    canvas.style.gridTemplateColumns = `repeat(20, 20px)`
-    canvas.style.gridTemplateRows = `repeat(20, 20px)`
 
     const children = []
     for (const player of state.players) {
       const pct = nameToPct(player.name)
 
+      let img_url = `../sprites/${theme}/player.png`
+      if (isDev) {
+        // Workaround for the weirdest bug that I have seen:
+        // File-system urls don't work in `mask`!
+        img_url = `https://raw.githubusercontent.com/kofoednielsen/pass/main/frontend/sprites/${theme}/player.png`
+      }
+
       const elem = document.createElement('div')
       children.push(elem)
       elem.className = `player`
+      elem.style.webkitMask = `url("${img_url}")`
+      elem.style.mask = `url("${img_url}")`
       elem.style.backgroundColor = `hsl(${pct} 100% 40%)`
       elem.style.gridColumnStart = player.position.x
       elem.style.gridRowStart = player.position.y
       const img = document.createElement('img')
       elem.appendChild(img)
-      img.src = `../sprites/${theme}/player.png`
+      img.src = img_url
     }
 
     for (const proj of state.projectiles) {

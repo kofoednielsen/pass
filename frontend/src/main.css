@@ -35,8 +35,3 @@ button {
 .player img {
     mix-blend-mode: multiply;
 }
-
-.theme-snake .player {
-    -webkit-mask: url("../sprites/snake/player.png");
-    mask: url("../sprites/snake/player.png");
-}
