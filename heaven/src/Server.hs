@@ -5,7 +5,7 @@ import Data.List (find)
 import Data.Maybe (fromMaybe)
 import Data.Text (Text)
 import qualified Data.Text as T
-import Control.Monad (forM_, void)
+import Control.Monad (forM_, void, when)
 import qualified Control.Concurrent as C
 import Control.Exception (handle)
 import System.Random
@@ -50,6 +50,10 @@ newPlayer name conn = do
 
 addPlayer :: Player -> State -> State
 addPlayer player state = state { statePlayers = player : statePlayers state }
+
+getPlayer :: Text -> State -> Player
+getPlayer name state = fromMaybe (error ("no player with name '" ++ T.unpack name ++ "'"))
+                       $ find ((== name) . playerName) $ statePlayers state
 
 removePlayer :: Text -> State -> State
 removePlayer name state = state { statePlayers = filter ((/= name) . playerName)
@@ -107,7 +111,12 @@ receiveLoop conn stateMVar = do
     GoDown -> changePosition 0 1
     GoLeft -> changePosition (-1) 0
     GoRight -> changePosition 1 0
-    Attack -> attack stateMVar name
+    Attack -> do
+      attack stateMVar name
+      state <- C.readMVar stateMVar
+      let player = getPlayer (requestName request) state
+      when (playerHealth player <= 0) $ send player (Api.encodeText $ Switch "hell")
+
   receiveLoop conn stateMVar
 
 gameLoop :: C.MVar State -> IO ()
