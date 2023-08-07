@@ -156,8 +156,8 @@ function handle(socket: WebSocket, addr: Deno.Addr) {
     // Switch server when going out of bounds
     const position = client!.players[request.name].position
     if (
-      position.x < 0 || position.x > width || position.y < 0 ||
-      position.y > height
+      position.x < 0 || position.x >= width || position.y < 0 ||
+      position.y >= height
     ) {
       delete client!.players[request.name]
       send({

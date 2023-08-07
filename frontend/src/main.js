@@ -85,8 +85,8 @@ const beginGameAtUrl = (url) => {
       elem.style.webkitMask = `url("${imgUrl}")`
       elem.style.mask = `url("${imgUrl}")`
       elem.style.backgroundColor = `hsl(${pct} 100% 40%)`
-      elem.style.gridColumnStart = player.position.x
-      elem.style.gridRowStart = player.position.y
+      elem.style.gridColumnStart = player.position.x + 1
+      elem.style.gridRowStart = player.position.y + 1
       const img = document.createElement('img')
       elem.appendChild(img)
       img.src = imgUrl
@@ -96,8 +96,8 @@ const beginGameAtUrl = (url) => {
       const elem = document.createElement('img')
       children.push(elem)
       elem.src = `../sprites/${theme}/projectile.png`
-      elem.style.gridColumnStart = proj.x
-      elem.style.gridRowStart = proj.y
+      elem.style.gridColumnStart = proj.x + 1
+      elem.style.gridRowStart = proj.y + 1
     }
 
     canvas.replaceChildren(...children)
