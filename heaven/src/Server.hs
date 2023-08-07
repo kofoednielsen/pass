@@ -5,13 +5,14 @@ import Data.Text (Text)
 import Control.Exception (finally)
 import Control.Monad (forM_, forever)
 import qualified Control.Concurrent as C
+import Control.Exception (handle)
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
 
 import qualified Network.WebSockets as WS
 
 import Types
-import Api
+import qualified Api
 
 host :: String
 host = "127.0.0.1"
@@ -47,11 +48,12 @@ addClient client clients = client : clients
 removeClient :: Client -> ServerState -> ServerState
 removeClient client = filter ((/= fst client) . fst)
 
--- Send a message to all clients, and log it on stdout:
-broadcast :: Text -> ServerState -> IO ()
-broadcast message clients = do
-  T.putStrLn message
-  forM_ clients $ \(_, conn) -> WS.sendTextData conn message
+broadcast :: Text -> C.MVar ServerState -> IO ()
+broadcast message state = do
+  clients <- C.readMVar state
+  forM_ clients $ \(client@(_, conn)) -> handle (handler client) $ WS.sendTextData conn message
+  where handler :: Client -> WS.ConnectionException -> IO ()
+        handler client _ = C.modifyMVar_ state $ pure . removeClient client
 
 main :: IO ()
 main = do
@@ -59,28 +61,54 @@ main = do
   _threadId <- C.forkIO $ gameLoop state
   WS.runServer host port $ server state
 
--- FIXME: Support sudden disconnects with e.g. 'finally disconnect'
 server :: C.MVar ServerState -> WS.ServerApp
 server state pending = do
     conn <- WS.acceptRequest pending
-    WS.withPingThread conn 30 (return ()) $ do
-      msg <- WS.receiveData conn
-      let request = decodeText msg
-      let client = (requestName request, conn)
-      print request
-      clients <- C.readMVar state
-      case requestAction request of
-        Join -> C.modifyMVar_ state $ pure . addClient client
-        Leave -> C.modifyMVar_ state $ pure . removeClient client
-        GoUp -> undefined
-        GoDown -> undefined
-        GoLeft -> undefined
-        GoRight -> undefined
-        Attack -> undefined
+    WS.withPingThread conn 30 (return ()) $ receiveLoop conn state
+
+receiveLoop :: WS.Connection -> C.MVar ServerState -> IO ()
+receiveLoop conn state = do
+  msg <- WS.receiveData conn
+  let request = Api.decodeText msg
+  let client = (requestName request, conn)
+  print request
+  clients <- C.readMVar state
+  case requestAction request of
+    Join -> do
+      x <- C.modifyMVar_ state $ pure . addClient client
+      -- WS.sendTextData conn (Api.encodeText dummyResponse)
+      -- _threadId <- C.forkIO $ gameLoop state
+      return x
+    Leave -> C.modifyMVar_ state $ pure . removeClient client
+    GoUp -> undefined
+    GoDown -> undefined
+    GoLeft -> undefined
+    GoRight -> undefined
+    Attack -> undefined
+  receiveLoop conn state
+
+dummyResponse :: Response
+dummyResponse =
+  let player = Player { playerName = "tester"
+                      , playerInvincible = False
+                      , playerPosition = Position { positionX = 3
+                                                  , positionY = 10
+                                                  }
+                      , playerHealth = 0.5
+                      }
+      projectile = Position { positionX = 1
+                            , positionY = 0
+                            }
+      state = State { statePlayers = [ player ]
+                       , stateProjectiles = [ projectile ]
+                       }
+  in NewState state
 
 gameLoop :: C.MVar ServerState -> IO ()
 gameLoop state = do
   clients <- C.readMVar state
-  putStrLn ("step; current clients: " ++ show (map fst clients))
+  putStrLn ("current clients: " ++ show (map fst clients))
+  broadcast (Api.encodeText dummyResponse) state
+
   C.threadDelay 100000
   gameLoop state
