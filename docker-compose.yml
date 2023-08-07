@@ -5,6 +5,9 @@ services:
       context: frontend
     ports: 
       - '0.0.0.0:8080:80'
+  hell:
+    build:
+      context: hell
   snake:
     build:
       context: snake

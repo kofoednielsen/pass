@@ -4,3 +4,4 @@ file_server
 
 reverse_proxy /snake snake
 reverse_proxy /sketch sketch
+reverse_proxy /hell hell
