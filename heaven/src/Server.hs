@@ -48,9 +48,9 @@ newPlayer name conn = do
 addPlayer :: Player -> State -> State
 addPlayer player state = state { statePlayers = player : statePlayers state }
 
-removePlayer :: Player -> State -> State
-removePlayer player state = state { statePlayers = filter ((/= playerName player) . playerName)
-                                                   $ statePlayers state }
+removePlayer :: Text -> State -> State
+removePlayer name state = state { statePlayers = filter ((/= name) . playerName)
+                                                 $ statePlayers state }
 
 main :: IO ()
 main = do
@@ -67,11 +67,12 @@ receiveLoop :: WS.Connection -> C.MVar State -> IO ()
 receiveLoop conn state = do
   msg <- WS.receiveData conn
   let request = Api.decodeText msg
-  player <- newPlayer (requestName request) conn
   print request
   case requestAction request of
-    Join -> C.modifyMVar_ state $ pure . addPlayer player
-    Leave -> C.modifyMVar_ state $ pure . removePlayer player
+    Join -> do
+      player <- newPlayer (requestName request) conn
+      C.modifyMVar_ state $ pure . addPlayer player
+    Leave -> C.modifyMVar_ state $ pure . removePlayer (requestName request)
     GoUp -> undefined
     GoDown -> undefined
     GoLeft -> undefined
@@ -103,4 +104,4 @@ broadcast stateMVar message = do
   state <- C.readMVar stateMVar
   forM_ (statePlayers state) $ \player -> handle (handler player) $ send player message
   where handler :: Player -> WS.ConnectionException -> IO ()
-        handler player _ = C.modifyMVar_ stateMVar $ pure . removePlayer player
+        handler player _ = C.modifyMVar_ stateMVar $ pure . removePlayer (playerName player)
