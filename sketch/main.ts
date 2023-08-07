@@ -185,7 +185,15 @@ function handle(socket: WebSocket, addr: Deno.Addr) {
   socket.onerror = (e) => console.error(`WebSocket error: ${e}`)
 }
 
-const listener = Deno.listen({ port: 80 })
+let hostname = "localhost"
+let port = 8080
+if (Deno.args.length > 0) {
+  const res = Deno.args[0].split(':')
+  hostname = res[0]
+  port = parseInt(res[1], 10)
+}
+
+const listener = Deno.listen({ hostname, port })
 
 console.info(`Listening on: ${addr_to_string(listener.addr)}`)
 
