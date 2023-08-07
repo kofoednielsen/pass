@@ -143,13 +143,14 @@ func (h *hell) updateFromInput() {
 func (h *hell) dealDamage(pos position) {
 	n, s, w, e := pos.Up(), pos.Down(), pos.Left(), pos.Right()
 	nw, ne, sw, se := n.Left(), n.Right(), s.Left(), s.Right()
-	for _, p := range h.players {
+	for name, p := range h.players {
 		switch p.Pos {
 		case n, s, w, e:
 			p.Health -= 0.15
 		case nw, ne, sw, se:
 			p.Health -= 0.10
 		}
+		h.players[name] = p
 	}
 }
 
