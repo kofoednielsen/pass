@@ -111,12 +111,15 @@ gameLoop stateMVar = do
 
   putStrLn "current players:"
   forM_ (statePlayers state) print
-  putStrLn "----------------"
-  putStrLn ""
 
   let state' = state
       response = NewState state'
-  broadcast stateMVar (Api.encodeText response)
+      responseText = Api.encodeText response
+  putStrLn "Response:"
+  print responseText
+  broadcast stateMVar responseText
+  putStrLn "----------------"
+  putStrLn ""
 
   C.threadDelay 100000
   gameLoop stateMVar
