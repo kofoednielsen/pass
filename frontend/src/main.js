@@ -4,14 +4,25 @@ const height = 20
 // Enabled when the hostname is not set, i.e. likely a file system path
 const isDev = !location.host
 
+// First one here will be the fallback theme
+const knownThemes = ['snake']
+const servers = [
+  `ws://${location.host}/snake`,
+  `ws://${location.host}/sketch`,
+]
+
+var joined = false
+var username = ""
+var socket = null
+
 const nameToPct = (name) => {
-    var hash = 0, i, chr;
-    for (i = 0; i < name.length; i++) {
-      chr = name.charCodeAt(i);
-      hash = ((hash << 5) - hash) + chr;
-      hash |= 0;
+    let hash = 0, chr
+    for (let i = 0; i < name.length; i++) {
+      chr = name.charCodeAt(i)
+      hash = ((hash << 5) - hash) + chr
+      hash |= 0
     }
-    return hash % 100;
+    return hash % 100
 }
 
 const selectNextUrl = () => {
@@ -19,33 +30,36 @@ const selectNextUrl = () => {
     return `ws://localhost:8080/ws`
   }
 
-  const theme = knownThemes[0]
-
-  return `ws://${location.host}/${theme}`
+  // Select one randomly
+  return servers[Math.floor(Math.random() * servers.length)]
 }
 
-// First one here will be the fallback theme
-const knownThemes = ['snake']
+const sendJoin = () => {
+  const request = { name: username, action: 'join' }
+  console.log(request)
+  socket.send(JSON.stringify(request))
+}
 
 const beginGameAtUrl = (url) => {
-  var joined = false
-  var username = ""
   const joinButton = document.getElementById('join')
-  const usernameField = document.getElementById('username')
-  usernameField.focus()
-
   const canvas = document.getElementById('canvas')
-  canvas.style.gridTemplateColumns = `repeat(${width}, 20px)`
-  canvas.style.gridTemplateRows = `repeat(${height}, 20px)`
 
-  var socket = new WebSocket(url)
+  socket = new WebSocket(url)
 
   socket.addEventListener("open", (event) => {
-    joinButton.disabled = false
+    if (joined) {
+      sendJoin()
+    } else {
+      joinButton.disabled = false
+    }
   })
 
   socket.addEventListener('message', (event) => {
     const state = JSON.parse(event.data)
+    if (state.event === 'switch') {
+      socket.close()
+      return
+    }
     let theme
     if (knownThemes.indexOf(state.theme) === -1) {
       theme = knownThemes[0]
@@ -58,24 +72,24 @@ const beginGameAtUrl = (url) => {
     for (const player of state.players) {
       const pct = nameToPct(player.name)
 
-      let img_url = `../sprites/${theme}/player.png`
+      let imgUrl = `../sprites/${theme}/player.png`
       if (isDev) {
         // Workaround for the weirdest bug that I have seen:
         // File-system urls don't work in `mask`!
-        img_url = `https://raw.githubusercontent.com/kofoednielsen/pass/main/frontend/sprites/${theme}/player.png`
+        imgUrl = `https://raw.githubusercontent.com/kofoednielsen/pass/main/frontend/sprites/${theme}/player.png`
       }
 
       const elem = document.createElement('div')
       children.push(elem)
       elem.className = `player`
-      elem.style.webkitMask = `url("${img_url}")`
-      elem.style.mask = `url("${img_url}")`
+      elem.style.webkitMask = `url("${imgUrl}")`
+      elem.style.mask = `url("${imgUrl}")`
       elem.style.backgroundColor = `hsl(${pct} 100% 40%)`
       elem.style.gridColumnStart = player.position.x
       elem.style.gridRowStart = player.position.y
       const img = document.createElement('img')
       elem.appendChild(img)
-      img.src = img_url
+      img.src = imgUrl
     }
 
     for (const proj of state.projectiles) {
@@ -90,16 +104,32 @@ const beginGameAtUrl = (url) => {
   })
 
   socket.addEventListener('error', (event) => {
-    console.error("WebSocket error: ", event);
+    console.error("WebSocket error: ", event)
   })
+
+  socket.addEventListener("close", () => {
+    beginGameAtUrl(selectNextUrl())
+  })
+}
+
+window.addEventListener("load", () => {
+  const joinButton = document.getElementById('join')
+  const usernameField = document.getElementById('username')
+  usernameField.focus()
+
+  const canvas = document.getElementById('canvas')
+  canvas.style.gridTemplateColumns = `repeat(${width}, 20px)`
+  canvas.style.gridTemplateRows = `repeat(${height}, 20px)`
+
+  beginGameAtUrl(selectNextUrl())
 
   usernameField.addEventListener("keypress", function(event) {
     // If the user presses the "Enter" key on the keyboard
     if (event.key === "Enter") {
-      event.preventDefault();
-      joinButton.click();
+      event.preventDefault()
+      joinButton.click()
     }
-  });
+  })
 
   joinButton.addEventListener('click', () => {
     const value = usernameField.value
@@ -108,8 +138,7 @@ const beginGameAtUrl = (url) => {
       const username_input = document.querySelector(".username-input")
       username_input.style.visibility = 'hidden'
       joined = true
-      console.log({name: username, action: 'join'})
-      socket.send(JSON.stringify({name: username, action: 'join'}))
+      sendJoin()
     }
   })
 
@@ -133,8 +162,4 @@ const beginGameAtUrl = (url) => {
         }
       }
   })
-}
-
-window.addEventListener("load", () => {
-  beginGameAtUrl(selectNextUrl())
 })
