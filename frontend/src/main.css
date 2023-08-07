@@ -1,14 +1,16 @@
 body {
     background-color: white;
-    width: 400px;
+    width: 400px; /* Ultra hack */
     margin: auto;
     display: flex;
     flex-direction: column;
-    row-gap: 2em;
+}
+
+h1 {
+    text-align: center;
 }
 
 .username-input {
-    margin-top: 1em;
     display: flex;
 }
 
@@ -22,16 +24,43 @@ button {
     flex-grow: 1;
 }
 
+.game {
+    margin-top: 2em;
+    display: flex;
+}
+
 #canvas {
-    margin: auto;
     display: grid;
     background-color: lightgray;
 }
 
 .player {
+    mask-size: cover;
     display: flex;
 }
 
 .player img {
     mix-blend-mode: multiply;
+}
+
+.legend {
+    flex-grow: 1;
+    margin-left: 1em;
+    min-width: 200px;
+}
+
+#legend-data {
+    margin-left: 1em;
+    display: flex;
+    flex-direction: column;
+}
+
+#legend-data > div {
+    display: flex;
+    column-gap: 1em;
+}
+
+#legend-data .player {
+    width: 1em;
+    height: 1em;
 }

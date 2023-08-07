@@ -16,14 +16,14 @@ var joined = false
 var username = ""
 var socket = null
 
-const nameToPct = (name) => {
+const nameToDeg = (name) => {
     let hash = 0, chr
     for (let i = 0; i < name.length; i++) {
       chr = name.charCodeAt(i)
       hash = ((hash << 5) - hash) + chr
       hash |= 0
     }
-    return hash % 100
+    return hash % 360
 }
 
 const selectNextUrl = () => {
@@ -44,6 +44,31 @@ const sendJoin = () => {
 const beginGameAtUrl = (url) => {
   const joinButton = document.getElementById('join')
   const canvas = document.getElementById('canvas')
+  const legend = document.getElementById('legend-data')
+
+  let currentPlayerData = []
+
+  const createPlayerDiv = (theme, name) => {
+    const pct = nameToDeg(name)
+
+    let imgUrl = `../sprites/${theme}/player.png`
+    if (isDev) {
+      // Workaround for the weirdest bug that I have seen:
+      // File-system urls don't work in `mask`!
+      imgUrl = `https://raw.githubusercontent.com/kofoednielsen/pass/main/frontend/sprites/${theme}/player.png`
+    }
+
+    const elem = document.createElement('div')
+    elem.className = `player`
+    elem.style.webkitMaskImage = `url("${imgUrl}")`
+    elem.style.maskImage = `url("${imgUrl}")`
+    elem.style.backgroundColor = `hsl(${pct}deg 100% 40%)`
+    const img = document.createElement('img')
+    elem.appendChild(img)
+    img.src = imgUrl
+
+    return elem
+  }
 
   socket = new WebSocket(url)
 
@@ -69,39 +94,48 @@ const beginGameAtUrl = (url) => {
     }
     canvas.className = `theme-${theme}`
 
-    const children = []
+    const canvasChildren = []
     for (const player of state.players) {
-      const pct = nameToPct(player.name)
-
-      let imgUrl = `../sprites/${theme}/player.png`
-      if (isDev) {
-        // Workaround for the weirdest bug that I have seen:
-        // File-system urls don't work in `mask`!
-        imgUrl = `https://raw.githubusercontent.com/kofoednielsen/pass/main/frontend/sprites/${theme}/player.png`
-      }
-
-      const elem = document.createElement('div')
-      children.push(elem)
-      elem.className = `player`
-      elem.style.webkitMask = `url("${imgUrl}")`
-      elem.style.mask = `url("${imgUrl}")`
-      elem.style.backgroundColor = `hsl(${pct} 100% 40%)`
+      const elem = createPlayerDiv(theme, player.name)
       elem.style.gridColumnStart = player.position.x + 1
       elem.style.gridRowStart = player.position.y + 1
-      const img = document.createElement('img')
-      elem.appendChild(img)
-      img.src = imgUrl
+      canvasChildren.push(elem)
     }
 
     for (const proj of state.projectiles) {
       const elem = document.createElement('img')
-      children.push(elem)
+      canvasChildren.push(elem)
       elem.src = `../sprites/${theme}/projectile.png`
       elem.style.gridColumnStart = proj.x + 1
       elem.style.gridRowStart = proj.y + 1
     }
 
-    canvas.replaceChildren(...children)
+    canvas.replaceChildren(...canvasChildren)
+
+    let deduplicatedPlayerData = []
+    for (const player of state.players) {
+      deduplicatedPlayerData.push(player.name)
+    }
+    deduplicatedPlayerData = [...new Set(deduplicatedPlayerData)]
+    deduplicatedPlayerData.sort()
+
+    if (JSON.stringify(deduplicatedPlayerData) !== currentPlayerData) {
+      currentPlayerData = JSON.stringify(deduplicatedPlayerData)
+
+      const legendChildren = []
+      for (const name of deduplicatedPlayerData) {
+        const elem = document.createElement('div')
+        legendChildren.push(elem)
+
+        elem.appendChild(createPlayerDiv(theme, name))
+
+        const p = document.createElement('span')
+        elem.appendChild(p)
+        p.innerHTML = name
+      }
+
+      legend.replaceChildren(...legendChildren)
+    }
   })
 
   socket.addEventListener('error', (event) => {
