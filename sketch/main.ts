@@ -115,34 +115,41 @@ function handle(socket: WebSocket, addr: Deno.Addr) {
     console.info(`Request: ${addr_to_string(addr)}, ${e.data}`)
     const request = JSON.parse(e.data) as ClientRequest
 
-    switch (request.action) {
-      case "up": {
-        client!.players[request.name].position.y -= 1
-        break
+    if (request.action === "join") {
+      const x = Math.round(width / 2)
+      const y = Math.round(height / 2)
+      client!.players[request.name] = { position: { x, y } }
+    } else {
+      const player = client!.players[request.name]
+
+      if (player === undefined) {
+        console.error(`${request.name} tried to do '${request.action}' before joining`)
+        return
       }
-      case "down": {
-        client!.players[request.name].position.y += 1
-        break
-      }
-      case "left": {
-        client!.players[request.name].position.x -= 1
-        break
-      }
-      case "right": {
-        client!.players[request.name].position.x += 1
-        break
-      }
-      case "attack": {
-        const position = client!.players[request.name].position
-        // Paint or unpaint the current tile
-        map[position.x][position.y] = !map[position.x][position.y]
-        break
-      }
-      case "join": {
-        const x = Math.round(width / 2)
-        const y = Math.round(height / 2)
-        client!.players[request.name] = { position: { x, y } }
-        break
+
+      switch (request.action) {
+        case "up": {
+          player.position.y -= 1
+          break
+        }
+        case "down": {
+          player.position.y += 1
+          break
+        }
+        case "left": {
+          player.position.x -= 1
+          break
+        }
+        case "right": {
+          player.position.x += 1
+          break
+        }
+        case "attack": {
+          const position = player.position
+          // Paint or unpaint the current tile
+          map[position.x][position.y] = !map[position.x][position.y]
+          break
+        }
       }
     }
 
