@@ -5,8 +5,9 @@ const height = 20
 const isDev = !location.host
 
 // First one here will be the fallback theme
-const knownThemes = ['snake']
+const knownThemes = ['snake', 'hell', 'sketch']
 const servers = [
+  `ws://${location.host}/hell`,
   `ws://${location.host}/snake`,
   `ws://${location.host}/sketch`,
 ]
