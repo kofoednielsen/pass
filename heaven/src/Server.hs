@@ -1,7 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Server (main) where
 
+import Data.List (find)
+import Data.Maybe (fromMaybe)
 import Data.Text (Text)
+import qualified Data.Text as T
 import Control.Monad (forM_, void)
 import qualified Control.Concurrent as C
 import Control.Exception (handle)
@@ -48,6 +51,10 @@ newPlayer name conn = do
 addPlayer :: Player -> State -> State
 addPlayer player state = state { statePlayers = player : statePlayers state }
 
+getPlayer :: Text -> State -> Player
+getPlayer name state = fromMaybe (error ("no player with name '" ++ T.unpack name ++ "'"))
+                       $ find ((== name) . playerName) $ statePlayers state
+
 removePlayer :: Text -> State -> State
 removePlayer name state = state { statePlayers = filter ((/= name) . playerName)
                                                  $ statePlayers state }
@@ -64,21 +71,34 @@ server state pending = do
     WS.withPingThread conn 30 (return ()) $ receiveLoop conn state
 
 receiveLoop :: WS.Connection -> C.MVar State -> IO ()
-receiveLoop conn state = do
+receiveLoop conn stateMVar = do
   msg <- WS.receiveData conn
   let request = Api.decodeText msg
+      name = requestName request
+      changePosition :: Int -> Int -> IO ()
+      changePosition xDiff yDiff = C.modifyMVar_ stateMVar $ \state -> do
+        let player = getPlayer name state
+            position = playerPosition player
+            player' = player { playerPosition = Position { positionX = positionX position + xDiff
+                                                         , positionY = positionY position + yDiff
+                                                         }
+                             }
+        return state { statePlayers = map (\p -> if playerName player == name
+                                                 then player'
+                                                 else p) $ statePlayers state }
+
   print request
   case requestAction request of
     Join -> do
       player <- newPlayer (requestName request) conn
-      C.modifyMVar_ state $ pure . addPlayer player
-    Leave -> C.modifyMVar_ state $ pure . removePlayer (requestName request)
-    GoUp -> undefined
-    GoDown -> undefined
-    GoLeft -> undefined
-    GoRight -> undefined
+      C.modifyMVar_ stateMVar $ pure . addPlayer player
+    Leave -> C.modifyMVar_ stateMVar $ pure . removePlayer name
+    GoUp -> changePosition 0 (-1)
+    GoDown -> changePosition 0 1
+    GoLeft -> changePosition (-1) 0
+    GoRight -> changePosition 1 0
     Attack -> undefined
-  receiveLoop conn state
+  receiveLoop conn stateMVar
 
 gameLoop :: C.MVar State -> IO ()
 gameLoop stateMVar = do
