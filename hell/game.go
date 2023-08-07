@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"time"
 )
 
@@ -9,11 +10,25 @@ const (
 	mapWidth  = 20
 )
 
-//var game game
-
 type position struct {
 	X int `json:"x"`
 	Y int `json:"y"`
+}
+
+func (p *position) Up() position {
+	return position{p.X, (p.Y + mapHeight - 1) % mapHeight}
+}
+
+func (p *position) Down() position {
+	return position{p.X, (p.Y + 1) % mapHeight}
+}
+
+func (p *position) Left() position {
+	return position{(p.X + mapWidth - 1) % mapWidth, p.Y}
+}
+
+func (p *position) Right() position {
+	return position{(p.X + 1) % mapWidth, p.Y}
 }
 
 type player struct {
@@ -21,9 +36,13 @@ type player struct {
 	Invincible bool     `json:"invincible"`
 	Pos        position `json:"position"`
 	Health     float64  `json:"health"`
-	direction  float64
 	quit       chan struct{}
 	out        chan stateResponse
+	birthday   time.Time
+}
+
+func (p *player) update() {
+	p.Invincible = time.Since(p.birthday) < 5*time.Second
 }
 
 type hell struct {
@@ -42,12 +61,14 @@ func newHell() *hell {
 
 func (h *hell) addPlayer(name string, quit chan struct{}) chan stateResponse {
 	player := player{
-		Name:   name,
-		Health: 1.0,
-		quit:   quit,
-		out:    make(chan stateResponse),
+		Health:     1.0,
+		Invincible: true,
+		Name:       name,
+		Pos:        position{10, 10},
+		birthday:   time.Now(),
+		out:        make(chan stateResponse),
+		quit:       quit,
 	}
-	// TODO: Initialize position and direction
 	h.players[name] = player
 	return player.out
 }
@@ -57,46 +78,55 @@ func (h *hell) run() {
 	for {
 		h.updateFromInput()
 
-		// TODO: Update game state based on mechanics/time
-
 		for k, p := range h.players {
-			if p.Health == 0 {
+			if p.Health <= 0 {
 				h.kill(k)
 			}
 		}
 
 		<-h.clock.C
 
+		playerList := make([]player, 0)
+		for _, p := range h.players {
+			p.update()
+			playerList = append(playerList, p)
+		}
 		res := stateResponse{
-			// TODO: Construct response struct
+			Event:       "state",
+			Players:     playerList,
+			Projectiles: []position{},
+			Theme:       "hell",
 		}
 
-		for _, p := range h.players {
+		for _, p := range playerList {
 			p.out <- res
 		}
 	}
-
 }
 
 func (h *hell) updateFromInput() {
 	for {
 		select {
 		case req := <-h.in:
+			p, ok := h.players[req.Name]
+			if !ok {
+				log.Printf(`Unknown player name "%s"\n`, req.Name)
+			}
 			switch req.Action {
 			case "up":
-				// TODO: Handle up
+				p.Pos = p.Pos.Up()
 			case "down":
-				// TODO: Handle down
+				p.Pos = p.Pos.Down()
 			case "left":
-				// TODO: Handle left
+				p.Pos = p.Pos.Left()
 			case "right":
-				// TODO: Handle right
+				p.Pos = p.Pos.Right()
 			case "attack":
-				// TODO: Handle attack
+				h.dealDamage(p.Pos)
 			case "join":
-				// TODO: Handle join
+				log.Printf(`Player "%s" sent join after already joining\n`, p.Name)
 			default:
-				// bad client
+				log.Printf(`Player "%s" sent join unknown action "%s"\n`, p.Name, req.Action)
 			}
 		default:
 			// Queue is empty
@@ -105,7 +135,20 @@ func (h *hell) updateFromInput() {
 	}
 }
 
-func (h *hell) kill(player string) {
-	h.players[player].quit <- struct{}{}
-	delete(h.players, player)
+func (h *hell) dealDamage(pos position) {
+	n, s, w, e := pos.Up(), pos.Down(), pos.Left(), pos.Right()
+	nw, ne, sw, se := n.Left(), n.Right(), s.Left(), s.Right()
+	for _, p := range h.players {
+		switch p.Pos {
+		case n, s, w, e:
+			p.Health -= 0.15
+		case nw, ne, sw, se:
+			p.Health -= 0.10
+		}
+	}
+}
+
+func (h *hell) kill(p string) {
+	h.players[p].quit <- struct{}{}
+	delete(h.players, p)
 }
