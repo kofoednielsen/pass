@@ -31,8 +31,13 @@ const selectNextUrl = () => {
     return `ws://localhost:8080/ws`
   }
 
-  // Select one randomly
-  return servers[Math.floor(Math.random() * servers.length)]
+  // Select one randomly, except the last one
+  if (socket) {
+    const tmpServers = servers.filter((elem) => elem !== socket.url)
+    return tmpServers[Math.floor(Math.random() * tmpServers.length)]
+  } else {
+    return servers[Math.floor(Math.random() * servers.length)]
+  }
 }
 
 const sendJoin = () => {
