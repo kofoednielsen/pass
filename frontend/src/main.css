@@ -2,9 +2,13 @@ body {
     background-color: white;
     width: 400px;
     margin: auto;
+    display: flex;
+    flex-direction: column;
+    row-gap: 2em;
 }
 
 .username-input {
+    margin-top: 1em;
     display: flex;
 }
 
@@ -19,17 +23,20 @@ button {
 }
 
 #canvas {
-  max-width: 400px;
-  margin: auto;
+    margin: auto;
+    display: grid;
+    background-color: lightgray;
 }
 
-#canvas img, #canvas div {
-  float: left;
-  height: 20px;
-  width: 20px;
-  background-color: lightgray;
+.player {
+    display: flex;
 }
 
-.player-color img {
-  mix-blend-mode: multiply;
+.player img {
+    mix-blend-mode: multiply;
+}
+
+.theme-snake .player {
+    -webkit-mask: url("../sprites/snake/player.png");
+    mask: url("../sprites/snake/player.png");
 }

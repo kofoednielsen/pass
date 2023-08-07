@@ -176,7 +176,7 @@ function handle(socket: WebSocket, addr: Deno.Addr) {
   socket.onclose = () => {
     console.info(`Disconnect: ${addr_to_string(addr)}`)
     const index = clients.indexOf(client!)
-    if (index === undefined) {
+    if (index === -1) {
       throw "can only disconnect once, and only after connecting"
     }
     clients.splice(index, 1)

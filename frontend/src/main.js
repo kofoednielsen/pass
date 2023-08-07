@@ -17,6 +17,9 @@ const selectNextUrl = () => {
   }
 }
 
+// First one here will be the fallback theme
+const knownThemes = ['snake']
+
 const beginGameAtUrl = (url) => {
   var joined = false
   var username = ""
@@ -32,33 +35,45 @@ const beginGameAtUrl = (url) => {
 
   socket.addEventListener('message', (event) => {
     const state = JSON.parse(event.data)
-    const canvas = document.getElementById("canvas")
-    let html = ""
-    for (let y = 0; y < 20; y++) {
-      for (let x = 0; x < 20; x++) {
-        var object = "<div></div>"
-        for (const proj of state.projectiles) {
-          if (proj.x === x && proj.y === y) {
-            object = `<div><img src="../sprites/${state.theme}/projectile.png"></img></div>`
-          }
-        }
-        for (const player of state.players) {
-          if (player.position.x === x && player.position.y === y) {
-            const pct = nameToPct(player.name)
-            img= `/sprites/${state.theme}/player.png`
-            object = `
-              <div>
-                <div class="player-color" style="-webkit-mask: url('${img}'); background-color: hsl(${pct} 100% 40%)">
-                  <img src="${img}">
-                   </img>
-                </div>
-              </div>
-          `}
-        }
-        html += object
-      }
+    let theme
+    if (knownThemes.indexOf(state.theme) === -1) {
+      theme = knownThemes[0]
+    } else {
+      theme = state.theme
     }
-    canvas.innerHTML = html
+    const canvas = document.getElementById('canvas')
+    canvas.className = `theme-${theme}`
+    canvas.style.gridTemplateColumns = `repeat(20, 20px)`
+    canvas.style.gridTemplateRows = `repeat(20, 20px)`
+
+    const children = []
+    for (const player of state.players) {
+      const pct = nameToPct(player.name)
+
+      const elem = document.createElement('div')
+      children.push(elem)
+      elem.className = `player`
+      elem.style.backgroundColor = `hsl(${pct} 100% 40%)`
+      elem.style.gridColumnStart = player.position.x
+      elem.style.gridRowStart = player.position.y
+      const img = document.createElement('img')
+      elem.appendChild(img)
+      img.src = `../sprites/${theme}/player.png`
+    }
+
+    for (const proj of state.projectiles) {
+      const elem = document.createElement('img')
+      children.push(elem)
+      elem.src = `../sprites/${theme}/projectile.png`
+      elem.style.gridColumnStart = proj.x
+      elem.style.gridRowStart = proj.y
+    }
+
+    canvas.replaceChildren(...children)
+  })
+
+  socket.addEventListener('error', (event) => {
+    console.error("WebSocket error: ", event);
   })
 
   usernameField.addEventListener("keypress", function(event) {
