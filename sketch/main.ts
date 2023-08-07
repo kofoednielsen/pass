@@ -177,7 +177,8 @@ function handle(socket: WebSocket, addr: Deno.Addr) {
     console.info(`Disconnect: ${addr_to_string(addr)}`)
     const index = clients.indexOf(client!)
     if (index === -1) {
-      throw "can only disconnect once, and only after connecting"
+      console.error("can only disconnect once, and only after connecting")
+      return
     }
     clients.splice(index, 1)
   }
@@ -210,7 +211,11 @@ for await (const conn of listener) {
       response = new Response("request isn't trying to upgrade to websocket.")
     } else {
       const upgrade = Deno.upgradeWebSocket(requestEvent.request)
-      handle(upgrade.socket, conn.remoteAddr)
+      try {
+        handle(upgrade.socket, conn.remoteAddr)
+      } catch (e) {
+        console.error(e);
+      }
       response = upgrade.response
     }
     await requestEvent.respondWith(response)
