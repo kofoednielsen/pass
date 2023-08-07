@@ -45,15 +45,11 @@ newPlayer name conn = do
                   , playerPosition = Position { positionX = x
                                               , positionY = y
                                               }
-                  , playerHealth = 0.5
+                  , playerHealth = 1.0
                   }
 
 addPlayer :: Player -> State -> State
 addPlayer player state = state { statePlayers = player : statePlayers state }
-
-getPlayer :: Text -> State -> Player
-getPlayer name state = fromMaybe (error ("no player with name '" ++ T.unpack name ++ "'"))
-                       $ find ((== name) . playerName) $ statePlayers state
 
 removePlayer :: Text -> State -> State
 removePlayer name state = state { statePlayers = filter ((/= name) . playerName)
@@ -70,9 +66,11 @@ server state pending = do
     conn <- WS.acceptRequest pending
     WS.withPingThread conn 30 (return ()) $ receiveLoop conn state
 
-attack :: C.MVar State -> Player -> IO ()
-attack stateMVar player = do
-  return ()
+-- Attacking in heaven makes you lose health (temporary gameplay, not what was planned).
+attack :: C.MVar State -> Text -> IO ()
+attack stateMVar name =
+  C.modifyMVar_ stateMVar
+    $ pure . updatePlayer name (\player -> player { playerHealth = playerHealth player - 0.1 })
 
 updatePlayers :: ([Player] -> [Player]) -> (State -> State)
 updatePlayers f s = s { statePlayers = f $ statePlayers s }
@@ -109,9 +107,7 @@ receiveLoop conn stateMVar = do
     GoDown -> changePosition 0 1
     GoLeft -> changePosition (-1) 0
     GoRight -> changePosition 1 0
-    Attack -> do
-      state <- C.readMVar stateMVar
-      attack stateMVar (getPlayer name state)
+    Attack -> attack stateMVar name
   receiveLoop conn stateMVar
 
 gameLoop :: C.MVar State -> IO ()
