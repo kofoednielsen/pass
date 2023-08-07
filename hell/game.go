@@ -15,19 +15,19 @@ type position struct {
 	Y int `json:"y"`
 }
 
-func (p *position) Up() position {
+func (p position) Up() position {
 	return position{p.X, (p.Y + mapHeight - 1) % mapHeight}
 }
 
-func (p *position) Down() position {
+func (p position) Down() position {
 	return position{p.X, (p.Y + 1) % mapHeight}
 }
 
-func (p *position) Left() position {
+func (p position) Left() position {
 	return position{(p.X + mapWidth - 1) % mapWidth, p.Y}
 }
 
-func (p *position) Right() position {
+func (p position) Right() position {
 	return position{(p.X + 1) % mapWidth, p.Y}
 }
 
@@ -79,9 +79,9 @@ func (h *hell) run() {
 	for {
 		h.updateFromInput()
 
-		for k, p := range h.players {
+		for name, p := range h.players {
 			if p.Health <= 0 {
-				h.kill(k)
+				h.kill(name)
 			}
 		}
 
