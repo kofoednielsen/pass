@@ -16,7 +16,8 @@ testServerResponseSwitch =
 
 testServerResponseNewState :: IO ()
 testServerResponseNewState =
-  let player = Player { playerName = "niels"
+  let player = Player { playerConnection = undefined
+                      , playerName = "niels"
                       , playerInvincible = False
                       , playerPosition = Position { positionX = 3
                                                   , positionY = 10
