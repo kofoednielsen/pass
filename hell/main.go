@@ -26,25 +26,25 @@ type stateResponse struct {
 	Projectiles []position `json:"projectiles"`
 }
 
-const port = 8311
+const port = 8080
 
-var game hell
+var game *hell
 
 func main() {
 	fmt.Println("Generating game world...")
-	h := newHell()
-	go h.run()
+	game = newHell()
+	go game.run()
 
-	http.HandleFunc("/", rootHandler)
-	http.HandleFunc("/hell", hellHandler)
+	// http.HandleFunc("/", rootHandler)
+	http.HandleFunc("/", hellHandler)
 
 	fmt.Println("Listening on port", port)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", port), nil))
 }
 
-func rootHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Welcome to Hell...")
-}
+// func rootHandler(w http.ResponseWriter, r *http.Request) {
+// 	fmt.Fprintf(w, "Welcome to Hell...")
+// }
 
 var upgrader = websocket.Upgrader{
 	ReadBufferSize:  1024,
@@ -63,9 +63,9 @@ func hellHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Add player
 	var req request
-	err = conn.ReadJSON(req)
+	err = conn.ReadJSON(&req)
 	if err != nil || req.Action != "join" {
-		log.Println(err)
+		log.Printf("Error reading from websocket: %s", err)
 		return
 	}
 	quit := make(chan struct{})
@@ -79,7 +79,7 @@ func hellHandler(w http.ResponseWriter, r *http.Request) {
 		Event: "switch",
 		Name:  req.Name,
 	}
-	err = conn.WriteJSON(res)
+	err = conn.WriteJSON(&res)
 	if err != nil {
 		log.Println(err)
 		return
@@ -91,9 +91,9 @@ func hellHandler(w http.ResponseWriter, r *http.Request) {
 func handleReads(conn *websocket.Conn) {
 	for {
 		var req request
-		err := conn.ReadJSON(req)
+		err := conn.ReadJSON(&req)
 		if err != nil {
-			log.Printf("Client send unexpected message: %v\n", err)
+			log.Printf("Client sent unexpected message: %v\n", err)
 		}
 		game.in <- req
 	}
@@ -101,7 +101,7 @@ func handleReads(conn *websocket.Conn) {
 
 func handleWrites(conn *websocket.Conn, resChan chan stateResponse) {
 	for res := range resChan {
-		err := conn.WriteJSON(res)
+		err := conn.WriteJSON(&res)
 		if err != nil {
 			log.Printf("Client didn't receive message: %v\n", err)
 		}

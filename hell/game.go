@@ -54,8 +54,9 @@ type hell struct {
 
 func newHell() *hell {
 	return &hell{
-		clock: time.NewTicker(100 * time.Millisecond),
-		in:    make(chan request, 10),
+		clock:   time.NewTicker(100 * time.Millisecond),
+		in:      make(chan request, 10),
+		players: make(map[string]player),
 	}
 }
 
@@ -110,7 +111,7 @@ func (h *hell) updateFromInput() {
 		case req := <-h.in:
 			p, ok := h.players[req.Name]
 			if !ok {
-				log.Printf(`Unknown player name "%s"\n`, req.Name)
+				log.Printf("Unknown player name \"%s\"\n", req.Name)
 			}
 			switch req.Action {
 			case "up":
@@ -124,10 +125,11 @@ func (h *hell) updateFromInput() {
 			case "attack":
 				h.dealDamage(p.Pos)
 			case "join":
-				log.Printf(`Player "%s" sent join after already joining\n`, p.Name)
+				log.Printf("Player \"%s\" sent join after already joining\n", p.Name)
 			default:
-				log.Printf(`Player "%s" sent join unknown action "%s"\n`, p.Name, req.Action)
+				log.Printf("Player \"%s\" sent join unknown action \"%s\"\n", p.Name, req.Action)
 			}
+			h.players[req.Name] = p
 		default:
 			// Queue is empty
 			return
