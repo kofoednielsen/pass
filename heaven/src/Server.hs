@@ -2,7 +2,7 @@
 module Server (main) where
 
 import Data.Text (Text)
-import Control.Monad (forM_)
+import Control.Monad (forM_, void)
 import qualified Control.Concurrent as C
 import Control.Exception (handle)
 
@@ -48,7 +48,7 @@ removePlayer player state = state { statePlayers = filter ((/= playerName player
 main :: IO ()
 main = do
   state <- C.newMVar newState
-  _threadId <- C.forkIO $ gameLoop state
+  void $ C.forkIO $ gameLoop state
   WS.runServer host port $ server state
 
 server :: C.MVar State -> WS.ServerApp
