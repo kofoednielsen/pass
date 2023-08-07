@@ -86,7 +86,7 @@ receiveLoop conn stateMVar = do
                                                          , positionY = positionY position + yDiff
                                                          }
                              }
-        return state { statePlayers = map (\p -> if playerName player == name
+        return state { statePlayers = map (\p -> if playerName p == name
                                                  then player'
                                                  else p) $ statePlayers state }
 
