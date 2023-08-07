@@ -74,22 +74,30 @@ attack :: C.MVar State -> Player -> IO ()
 attack stateMVar player = do
   return ()
 
+updatePlayers :: ([Player] -> [Player]) -> (State -> State)
+updatePlayers f s = s { statePlayers = f $ statePlayers s }
+
+updatePlayer :: Text -> (Player -> Player) -> (State -> State)
+updatePlayer name f s =
+  flip updatePlayers s
+  $ \players -> map (\p -> if playerName p == name
+                           then f p
+                           else p) players
+
 receiveLoop :: WS.Connection -> C.MVar State -> IO ()
 receiveLoop conn stateMVar = do
   msg <- WS.receiveData conn
   let request = Api.decodeText msg
       name = requestName request
       changePosition :: Int -> Int -> IO ()
-      changePosition xDiff yDiff = C.modifyMVar_ stateMVar $ \state -> do
-        let player = getPlayer name state
-            position = playerPosition player
-            player' = player { playerPosition = Position { positionX = positionX position + xDiff
-                                                         , positionY = positionY position + yDiff
-                                                         }
-                             }
-        return state { statePlayers = map (\p -> if playerName p == name
-                                                 then player'
-                                                 else p) $ statePlayers state }
+      changePosition xDiff yDiff =
+        C.modifyMVar_ stateMVar
+        $ pure . updatePlayer name (\player ->
+                                      let position = playerPosition player
+                                      in player { playerPosition = Position { positionX = positionX position + xDiff
+                                                                            , positionY = positionY position + yDiff
+                                                                            }
+                                                })
 
   print request
   case requestAction request of
