@@ -1,17 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Server (main) where
 
--- FIXME: Copied entirely from
--- https://github.com/jaspervdj/websockets/blob/master/example/server.lhs
--- (license: BSD-3); rewrite to work with our context.
-
-import System.IO.Unsafe
-
-import Data.Char (isPunctuation, isSpace)
 import Data.Text (Text)
 import Control.Exception (finally)
 import Control.Monad (forM_, forever)
-import Control.Concurrent (MVar, newMVar, modifyMVar_, modifyMVar, readMVar)
+import qualified Control.Concurrent as C
 import qualified Data.Text as T
 import qualified Data.Text.IO as T
 
@@ -19,6 +12,12 @@ import qualified Network.WebSockets as WS
 
 import Types
 import Api
+
+host :: String
+host = "127.0.0.1"
+
+port :: Int
+port = 8080
 
 type Client = (Text, WS.Connection)
 
@@ -54,47 +53,34 @@ broadcast message clients = do
   T.putStrLn message
   forM_ clients $ \(_, conn) -> WS.sendTextData conn message
 
--- The main function first creates a new state for the server, then spawns the
--- actual server. For this purpose, we use the simple server provided by
--- `WS.runServer`.
 main :: IO ()
 main = do
-  state <- newMVar newServerState
-  WS.runServer "127.0.0.1" 8080 $ application state
+  state <- C.newMVar newServerState
+  _threadId <- C.forkIO $ gameLoop state
+  WS.runServer host port $ server state
 
--- Our main application has the type:
-application :: MVar ServerState -> WS.ServerApp
-
--- Note that `WS.ServerApp` is nothing but a type synonym for
--- `WS.PendingConnection -> IO ()`.
-
--- Our application starts by accepting the connection. In a more realistic
--- application, you probably want to check the path and headers provided by the
--- pending request.
-
--- We also fork a pinging thread in the background. This will ensure the
--- connection stays alive on some browsers.
-application state pending = do
+-- FIXME: Support sudden disconnects with e.g. 'finally disconnect'
+server :: C.MVar ServerState -> WS.ServerApp
+server state pending = do
     conn <- WS.acceptRequest pending
     WS.withPingThread conn 30 (return ()) $ do
       msg <- WS.receiveData conn
       let request = decodeText msg
       let client = (requestName request, conn)
       print request
-      clients <- readMVar state
+      clients <- C.readMVar state
       case requestAction request of
-        Join -> modifyMVar_ state $ pure . addClient client
-        Leave -> modifyMVar_ state $ pure . removeClient client
+        Join -> C.modifyMVar_ state $ pure . addClient client
+        Leave -> C.modifyMVar_ state $ pure . removeClient client
         GoUp -> undefined
         GoDown -> undefined
         GoLeft -> undefined
         GoRight -> undefined
         Attack -> undefined
 
--- The talk function continues to read messages from a single client until he
--- disconnects. All messages are broadcasted to the other clients.
-talk :: Client -> MVar ServerState -> IO ()
-talk (user, conn) state = forever $ do
-  msg <- WS.receiveData conn
-  readMVar state >>= broadcast
-    (user `mappend` ": " `mappend` msg)
+gameLoop :: C.MVar ServerState -> IO ()
+gameLoop state = do
+  clients <- C.readMVar state
+  putStrLn ("step; current clients: " ++ show (map fst clients))
+  C.threadDelay 100000
+  gameLoop state
