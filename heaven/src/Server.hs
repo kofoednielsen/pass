@@ -5,6 +5,7 @@ import Data.Text (Text)
 import Control.Monad (forM_, void)
 import qualified Control.Concurrent as C
 import Control.Exception (handle)
+import System.Random
 
 import qualified Network.WebSockets as WS
 
@@ -17,6 +18,10 @@ host = "127.0.0.1"
 port :: Int
 port = 8080
 
+width, height :: Int
+width = 20
+height = 20
+
 dummyProjectile :: Position -- FIXME: Just to show something
 dummyProjectile = Position { positionX = 5
                            , positionY = 15
@@ -27,16 +32,18 @@ newState = State { statePlayers = []
                  , stateProjectiles = [ dummyProjectile ]
                  }
 
-newPlayer :: Text -> WS.Connection -> Player
-newPlayer name conn =
-  Player { playerConnection = conn
-         , playerName = name
-         , playerInvincible = False
-         , playerPosition = Position { positionX = 3
-                                     , positionY = 10
-                                     }
-         , playerHealth = 0.5
-         }
+newPlayer :: Text -> WS.Connection -> IO Player
+newPlayer name conn = do
+  x <- getStdRandom (randomR (0, width - 1))
+  y <- getStdRandom (randomR (0, height - 1))
+  return $ Player { playerConnection = conn
+                  , playerName = name
+                  , playerInvincible = True
+                  , playerPosition = Position { positionX = x
+                                              , positionY = y
+                                              }
+                  , playerHealth = 0.5
+                  }
 
 addPlayer :: Player -> State -> State
 addPlayer player state = state { statePlayers = player : statePlayers state }
@@ -60,7 +67,7 @@ receiveLoop :: WS.Connection -> C.MVar State -> IO ()
 receiveLoop conn state = do
   msg <- WS.receiveData conn
   let request = Api.decodeText msg
-      player = newPlayer (requestName request) conn
+  player <- newPlayer (requestName request) conn
   print request
   case requestAction request of
     Join -> C.modifyMVar_ state $ pure . addPlayer player
