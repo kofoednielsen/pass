@@ -88,9 +88,10 @@ func (h *hell) run() {
 		<-h.clock.C
 
 		playerList := make([]player, 0)
-		for _, p := range h.players {
+		for name, p := range h.players {
 			p.update()
 			playerList = append(playerList, p)
+			h.players[name] = p
 		}
 		res := stateResponse{
 			Event:       "state",
