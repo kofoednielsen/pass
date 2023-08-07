@@ -3,3 +3,4 @@ root * /static
 file_server
 
 reverse_proxy /snake snake
+reverse_proxy /sketch sketch

@@ -8,3 +8,6 @@ services:
   snake:
     build:
       context: snake
+  sketch:
+    build:
+      context: sketch
