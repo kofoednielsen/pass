@@ -19,7 +19,7 @@ host :: String
 host = "127.0.0.1"
 
 port :: Int
-port = 8080
+port = 80
 
 width, height :: Int
 width = 20
