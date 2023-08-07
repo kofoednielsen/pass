@@ -114,7 +114,7 @@ gameLoop :: C.MVar State -> IO ()
 gameLoop stateMVar = do
   state <- C.readMVar stateMVar
 
-  putStrLn "current players:"
+  putStrLn "Current players:"
   forM_ (statePlayers state) print
 
   let state' = state
