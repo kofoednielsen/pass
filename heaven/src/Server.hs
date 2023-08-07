@@ -70,8 +70,9 @@ server state pending = do
     conn <- WS.acceptRequest pending
     WS.withPingThread conn 30 (return ()) $ receiveLoop conn state
 
-attack :: Player -> IO ()
-attack player = return ()
+attack :: C.MVar State -> Player -> IO ()
+attack stateMVar player = do
+  return ()
 
 receiveLoop :: WS.Connection -> C.MVar State -> IO ()
 receiveLoop conn stateMVar = do
@@ -102,7 +103,7 @@ receiveLoop conn stateMVar = do
     GoRight -> changePosition 1 0
     Attack -> do
       state <- C.readMVar stateMVar
-      attack (getPlayer name state)
+      attack stateMVar (getPlayer name state)
   receiveLoop conn stateMVar
 
 gameLoop :: C.MVar State -> IO ()
