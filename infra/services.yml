@@ -47,12 +47,12 @@ spec:
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: start
+  name: star
   namespace: flux-system
 spec:
   targetNamespace: pass
   interval: 1m0s
-  path: ./infra/start
+  path: ./infra/star
   prune: true
   sourceRef:
     namespace: flux-system
