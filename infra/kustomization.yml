@@ -1,0 +1,10 @@
+resources:
+  - frontend-deployment.yml
+  - frontend-ingress.yml
+  - frontend-service.yml
+  - sketch-deployment.yml
+  - sketch-ingress.yml
+  - sketch-service.yml
+  - snake-deployment.yml
+  - snake-ingress.yml
+  - snake-service.yml

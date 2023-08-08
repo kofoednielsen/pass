@@ -1,0 +1,18 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: snake-deployment
+  labels:
+    app: snake
+spec:
+  selector:
+    matchLabels:
+      app: snake
+  template:
+    metadata:
+      labels:
+        app: snake
+    spec:
+      containers:
+        - name: snake
+          image: ghcr.io/kofoednielsen/pass-snake:0.0.4

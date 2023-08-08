@@ -1,0 +1,18 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sketch-deployment
+  labels:
+    app: sketch
+spec:
+  selector:
+    matchLabels:
+      app: sketch
+  template:
+    metadata:
+      labels:
+        app: sketch
+    spec:
+      containers:
+        - name: sketch
+          image: ghcr.io/kofoednielsen/pass-sketch:0.0.4
