@@ -49,7 +49,12 @@ const sendJoin = () => {
 
 const beginGameAtUrl = (url) => {
   const joinButton = document.getElementById('join')
-  const canvas = document.getElementById('canvas')
+  const playerCanvas = document.getElementById('player-canvas')
+  playerCanvas.style.gridTemplateColumns = `repeat(${width}, 20px)`
+  playerCanvas.style.gridTemplateRows = `repeat(${height}, 20px)`
+  const projectileCanvas = document.getElementById('projectile-canvas')
+  projectileCanvas.style.gridTemplateColumns = `repeat(${width}, 20px)`
+  projectileCanvas.style.gridTemplateRows = `repeat(${height}, 20px)`
   const legend = document.getElementById('legend-data')
 
   let currentPlayerData = []
@@ -100,25 +105,25 @@ const beginGameAtUrl = (url) => {
     } else {
       theme = state.theme
     }
-    canvas.className = `theme-${theme}`
 
-    const canvasChildren = []
+    const playerCanvasChildren = []
     for (const player of state.players) {
       const elem = createPlayerDiv(theme, player.name)
       elem.style.gridColumnStart = player.position.x + 1
       elem.style.gridRowStart = player.position.y + 1
-      canvasChildren.push(elem)
+      playerCanvasChildren.push(elem)
     }
+    playerCanvas.replaceChildren(...playerCanvasChildren)
 
+    const projectileCanvasChildren = []
     for (const proj of state.projectiles) {
       const elem = document.createElement('img')
-      canvasChildren.push(elem)
+      projectileCanvasChildren.push(elem)
       elem.src = `../sprites/${theme}/projectile.png`
       elem.style.gridColumnStart = proj.x + 1
       elem.style.gridRowStart = proj.y + 1
     }
-
-    canvas.replaceChildren(...canvasChildren)
+    projectileCanvas.replaceChildren(...projectileCanvasChildren)
 
     let deduplicatedPlayerData = []
     for (const player of state.players) {
@@ -178,10 +183,6 @@ window.addEventListener("load", () => {
   const joinButton = document.getElementById('join')
   const usernameField = document.getElementById('username')
   usernameField.focus()
-
-  const canvas = document.getElementById('canvas')
-  canvas.style.gridTemplateColumns = `repeat(${width}, 20px)`
-  canvas.style.gridTemplateRows = `repeat(${height}, 20px)`
 
   beginGameAtUrl(selectNextUrl())
 

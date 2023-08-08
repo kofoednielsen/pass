@@ -29,9 +29,18 @@ button {
     display: flex;
 }
 
-#canvas {
-    display: grid;
+.canvas {
     background-color: lightgray;
+    position: relative;
+}
+
+.canvas div {
+    display: grid;
+}
+
+#projectile-canvas {
+    position: absolute;
+    top: 0;
 }
 
 .player {
