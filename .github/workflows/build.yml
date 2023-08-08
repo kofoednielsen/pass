@@ -41,4 +41,4 @@ jobs:
           context: ${{ matrix.context }}
           file: ${{ matrix.context }}/Dockerfile
           push: true
-          tags: ${{ env.TAG_NAME }}
+          tags: ${{ matrix.image }}:${{ env.TAG_NAME }}
