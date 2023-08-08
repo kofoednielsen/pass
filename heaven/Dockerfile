@@ -4,6 +4,6 @@ workdir /app
 
 COPY . ./
 
-RUN stack install
+RUN stack build
 
 CMD stack run
