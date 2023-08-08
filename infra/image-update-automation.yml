@@ -20,5 +20,4 @@ spec:
     push:
       branch: main
   update:
-    path: ./infra
     strategy: Setters
