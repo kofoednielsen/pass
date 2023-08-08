@@ -50,6 +50,7 @@ type hell struct {
 	globalDamageTick	int
 	players     		map[string]player
 	projectiles 		[]position
+	listeners			[]chan serverResponse
 }
 
 func newHell() *hell {
@@ -61,17 +62,35 @@ func newHell() *hell {
 	}
 }
 
-func (h *hell) addPlayer(name string) chan serverResponse {
+func (h *hell) addListener(channel chan serverResponse) {
+	h.listeners = append(h.listeners, channel)
+}
+
+func indexOf(listeners []chan serverResponse, channel chan serverResponse) int {
+    for i, listener := range listeners {
+        if (listener == channel) {
+            return i
+        }
+    }
+    return -1
+}
+
+
+func (h *hell) removeListener(channel chan serverResponse) {
+	i := indexOf(h.listeners, channel)
+	h.listeners = append(h.listeners[:i], h.listeners[i+1:]...)
+}
+
+func (h *hell) addPlayer(name string, channel chan serverResponse) {
 	player := player{
 		Health:     100,
 		Invincible: true,
 		Name:       name,
 		Pos:        position{10, 10},
 		birthday:   time.Now(),
-		out:        make(chan serverResponse),
+		out:        channel,
 	}
 	h.players[name] = player
-	return player.out
 }
 
 func (h *hell) run() {
@@ -109,8 +128,8 @@ func (h *hell) run() {
 			Theme:       "hell",
 		}
 
-		for _, p := range playerList {
-			p.out <- serverResponse{
+		for _, listener := range h.listeners {
+			listener <- serverResponse{
 				Switch: nil,
 				State: &res,
 			}

@@ -67,6 +67,12 @@ func hellHandler(w http.ResponseWriter, r *http.Request) {
 	log.Println("Client connected")
 	defer conn.Close()
 
+	resChan := make(chan serverResponse)
+	game.addListener(resChan)
+	defer game.removeListener(resChan)
+
+	go handleWrites(conn, resChan)
+
 	// Add player
 	var req request
 	err = conn.ReadJSON(&req)
@@ -83,10 +89,8 @@ func hellHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resChan := game.addPlayer(req.Name)
+	game.addPlayer(req.Name, resChan)
 	log.Println("Player joined")
-
-	go handleWrites(conn, resChan)
 
 	for {
 		var req request
