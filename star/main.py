@@ -75,7 +75,7 @@ def f(ws):
                 if players[name]["health"] <= 0:
                     ws.send(json.dumps({"event": "switch", "name": name}))
 
-        ws.send(json.dumps(get_state()))
+        ws.send(get_state())
 
 
 @app.route("/")
