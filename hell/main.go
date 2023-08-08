@@ -61,7 +61,7 @@ func hellHandler(w http.ResponseWriter, r *http.Request) {
 	upgrader.CheckOrigin = func(r *http.Request) bool { return true }
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Println(err)
+		log.Println("Error upgrading request: %v\n", err)
 		return
 	}
 	log.Println("Client connected")
