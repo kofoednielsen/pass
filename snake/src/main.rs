@@ -8,7 +8,7 @@ use std::{
 
 use futures_channel::mpsc::{unbounded, UnboundedSender};
 use futures_util::{future, stream::TryStreamExt, StreamExt};
-use rand::{rngs::ThreadRng, thread_rng};
+use rand::thread_rng;
 use tokio::{
     net::{TcpListener, TcpStream},
     time,
@@ -125,8 +125,8 @@ impl State {
         }
     }
 
-    fn step(&self, rng: &mut ThreadRng) -> Result<(), Error> {
-        let switchers = self.game_state.lock().unwrap().step(rng);
+    fn step(&self) -> Result<(), Error> {
+        let switchers = self.game_state.lock().unwrap().step(&mut thread_rng());
         let mut peer_map_lock = self.peer_map.lock().unwrap();
         for (recp, peer_name) in peer_map_lock.values_mut() {
             if let Some(name) = peer_name {
@@ -145,7 +145,7 @@ impl State {
 
     fn handle_request(&self, request: ClientRequest) -> Result<(), Error> {
         let mut state = self.game_state.lock().unwrap();
-        state.handle_request(&request.name, request.action.clone())
+        state.handle_request(&mut thread_rng(), &request.name, request.action.clone())
     }
 
     fn publish_state(&self) -> Result<(), Error> {
@@ -203,10 +203,7 @@ async fn main() -> Result<(), Error> {
 
         loop {
             interval.tick().await;
-            let mut rng = thread_rng();
-            state_step
-                .step(&mut rng)
-                .unwrap_or_else(|e| eprintln!("{e}"));
+            state_step.step().unwrap_or_else(|e| eprintln!("{e}"));
         }
     });
 

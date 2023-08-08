@@ -32,7 +32,12 @@ pub struct GameState {
 }
 
 impl GameState {
-    pub fn handle_request(&mut self, name: &str, action: PlayerAction) -> Result<(), Error> {
+    pub fn handle_request(
+        &mut self,
+        rng: &mut impl Rng,
+        name: &str,
+        action: PlayerAction,
+    ) -> Result<(), Error> {
         let player = self.players.entry(name.to_string());
         match (player, action) {
             (Entry::Occupied(mut player), PlayerAction::Join) => {
@@ -44,18 +49,20 @@ impl GameState {
                 player.get_mut().client_count -= 1;
                 // Do not add players to `switchers` here, they know it themselves...
             }
-            (Entry::Vacant(player), PlayerAction::Join) => {
-                // TODO: Find the least populated spot on the map,
-                // and a sensible direction.
-                let starting_position = Position { x: 3, y: 3 };
+            (Entry::Vacant(_), PlayerAction::Join) => {
+                let starting_position = self.find_free_spot(rng);
                 let starting_direction = Direction::Right;
-                player.insert(PlayerData {
-                    position: starting_position,
-                    tail: VecDeque::new(),
-                    current_direction: starting_direction,
-                    queued_directions: VecDeque::new(),
-                    client_count: 1,
-                });
+                // Work around lifetime issues
+                self.players.insert(
+                    name.to_string(),
+                    PlayerData {
+                        position: starting_position,
+                        tail: VecDeque::new(),
+                        current_direction: starting_direction,
+                        queued_directions: VecDeque::new(),
+                        client_count: 1,
+                    },
+                );
             }
             (Entry::Vacant(_), PlayerAction::Leave) => {
                 eprintln!("WARN: Somehow player {name} left without it being in the state");
@@ -90,6 +97,28 @@ impl GameState {
         }
 
         Ok(())
+    }
+
+    fn find_free_spot(&self, rng: &mut impl Rng) -> Position {
+        // Try to find a non-populated spot to start
+        let mut position = Position { x: 0, y: 0 };
+        for _ in 1..100 {
+            let x = rng.gen_range(0..WIDTH);
+            let y = rng.gen_range(0..HEIGHT);
+            position = Position { x, y };
+            'player: for player in self.players.values() {
+                if position == player.position {
+                    continue 'player;
+                }
+                for tail in player.tail.iter() {
+                    if position == *tail {
+                        continue 'player;
+                    }
+                }
+            }
+            break;
+        }
+        position
     }
 
     pub fn step(&mut self, rng: &mut impl Rng) -> Vec<String> {
@@ -193,9 +222,7 @@ impl GameState {
         }
 
         if self.current_apple.is_none() {
-            let x = rng.gen_range(0..WIDTH);
-            let y = rng.gen_range(0..HEIGHT);
-            self.current_apple = Some(Position { x, y });
+            self.current_apple = Some(self.find_free_spot(rng));
         }
 
         dead_players
