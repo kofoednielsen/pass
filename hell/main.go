@@ -64,32 +64,40 @@ func hellHandler(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
-	log.Println("Client Connected")
+	log.Println("Client connected")
+	defer conn.Close()
 
 	// Add player
 	var req request
 	err = conn.ReadJSON(&req)
-	if err != nil || req.Action != "join" {
-		log.Printf("Error reading from websocket: %s", err)
-		conn.Close()
+	if err != nil {
+		if websocket.IsUnexpectedCloseError(err) {
+			log.Printf("Client disconnected (before joining)")
+		} else {
+			log.Printf("Error reading from websocket: %v\n", err)
+		}
+		return
+	}
+	if req.Action != "join" {
+		log.Printf("Must join as the first action: %s", req.Action)
 		return
 	}
 
 	resChan := game.addPlayer(req.Name)
-	log.Println("Player added")
+	log.Println("Player joined")
 
-	go handleReads(conn)
 	go handleWrites(conn, resChan)
-}
 
-func handleReads(conn *websocket.Conn) {
 	for {
 		var req request
 		err := conn.ReadJSON(&req)
 		if err != nil {
-			log.Printf("Client sent unexpected message: %v\n", err)
-			conn.Close()
-			break
+			if websocket.IsUnexpectedCloseError(err) {
+				log.Printf("Client disconnected")
+			} else {
+				log.Printf("Error reading from websocket: %v\n", err)
+			}
+			return
 		}
 		game.in <- req
 	}
@@ -102,14 +110,18 @@ func handleWrites(conn *websocket.Conn, resChan chan serverResponse) {
 		if res.Switch != nil {
 			err := conn.WriteJSON(res.Switch)
 			if err != nil {
-				log.Printf("Client didn't receive message: %v\n", err)
+				if !websocket.IsUnexpectedCloseError(err) {
+					log.Printf("Error writing to websocket: %v\n", err)
+				}
 				break
 			}
 		}
 		if res.State != nil {
 			err := conn.WriteJSON(res.State)
 			if err != nil {
-				log.Printf("Client didn't receive message: %v\n", err)
+				if !websocket.IsUnexpectedCloseError(err) {
+					log.Printf("Error writing to websocket: %v\n", err)
+				}
 				break
 			}
 		}

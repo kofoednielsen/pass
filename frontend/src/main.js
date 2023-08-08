@@ -42,9 +42,9 @@ const selectNextUrl = () => {
 }
 
 const sendJoin = () => {
-  const request = { name: username, action: 'join' }
-  console.log(request)
-  socket.send(JSON.stringify(request))
+  const request = JSON.stringify({ name: username, action: 'join' })
+  console.log(`sending: ${request}`)
+  socket.send(request)
 }
 
 const beginGameAtUrl = (url) => {
@@ -79,6 +79,7 @@ const beginGameAtUrl = (url) => {
   socket = new WebSocket(url)
 
   socket.addEventListener("open", (event) => {
+    console.info(`connected to ${socket.url}`)
     if (joined) {
       sendJoin()
     } else {
@@ -87,6 +88,7 @@ const beginGameAtUrl = (url) => {
   })
 
   socket.addEventListener('message', (event) => {
+    console.debug(`received: ${event.data}`)
     const state = JSON.parse(event.data)
     if (state.event === 'switch') {
       socket.close()
@@ -145,10 +147,12 @@ const beginGameAtUrl = (url) => {
   })
 
   socket.addEventListener('error', (event) => {
-    console.error("WebSocket error: ", event)
+    console.error(`WebSocket error: ${event}`)
+    socket.close()
   })
 
   socket.addEventListener("close", () => {
+    console.info(`disconnected`)
     beginGameAtUrl(selectNextUrl())
   })
 }
@@ -198,8 +202,9 @@ window.addEventListener("load", () => {
           action = 'right'
         }
         if (action) {
-          console.log({name: username, action})
-          socket.send(JSON.stringify({name: username, action}))
+          const request = JSON.stringify({name: username, action})
+          console.log(`sending: ${request}`)
+          socket.send(request)
         }
       }
   })
