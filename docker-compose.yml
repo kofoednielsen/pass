@@ -16,6 +16,11 @@ services:
   sketch:
     build:
       context: sketch
-  heaven:
+  #heaven:
+  #  build:
+  #    context: heaven
+  star:
     build:
-      context: heaven
+      context: star
+    volumes:
+      - ./star:/app
