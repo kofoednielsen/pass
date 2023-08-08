@@ -10,6 +10,7 @@ spec:
   path: ./infra/frontend
   prune: true
   sourceRef:
+    namespace: flux-system
     kind: GitRepository
     name: flux-system
 ---
@@ -24,6 +25,7 @@ spec:
   path: ./infra/hell
   prune: true
   sourceRef:
+    namespace: flux-system
     kind: GitRepository
     name: flux-system
 ---
@@ -38,6 +40,7 @@ spec:
   path: ./infra/heaven
   prune: true
   sourceRef:
+    namespace: flux-system
     kind: GitRepository
     name: flux-system
 ---
@@ -52,6 +55,7 @@ spec:
   path: ./infra/start
   prune: true
   sourceRef:
+    namespace: flux-system
     kind: GitRepository
     name: flux-system
 ---
@@ -66,6 +70,7 @@ spec:
   path: ./infra/sketch
   prune: true
   sourceRef:
+    namespace: flux-system
     kind: GitRepository
     name: flux-system
 ---
@@ -80,5 +85,6 @@ spec:
   path: ./infra/snake
   prune: true
   sourceRef:
+    namespace: flux-system
     kind: GitRepository
     name: flux-system
