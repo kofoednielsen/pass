@@ -15,4 +15,4 @@ spec:
     spec:
       containers:
         - name: sketch
-          image: ghcr.io/kofoednielsen/pass-sketch:0.0.4 # {"$imagepolicy": "flux-system:sketch"}
+          image: ghcr.io/kofoednielsen/pass-sketch:0.0.4 # {"$imagepolicy": "pass:sketch"}

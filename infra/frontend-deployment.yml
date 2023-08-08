@@ -16,4 +16,4 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: ghcr.io/kofoednielsen/pass-frontend:0.0.4 # {"$imagepolicy": "flux-system:frontend"}
+          image: ghcr.io/kofoednielsen/pass-frontend:0.0.4 # {"$imagepolicy": "pass:frontend"}
