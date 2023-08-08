@@ -16,7 +16,7 @@ jobs:
           - context: ./snake
             image: ghcr.io/${{github.actor}}/pass-snake
           - context: ./frontend
-            image: ghcr.io/${{github.actor}}/pass-snake
+            image: ghcr.io/${{github.actor}}/pass-frontend
     permissions:
       contents: read
       packages: write
