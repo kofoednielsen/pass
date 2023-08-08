@@ -51,16 +51,23 @@ button {
 
 #legend-data {
     margin-left: 1em;
-    display: flex;
-    flex-direction: column;
-}
-
-#legend-data > div {
-    display: flex;
+    display: grid;
+    grid-template-columns: 1em 3em auto;
     column-gap: 1em;
+    align-items: center;
 }
 
 #legend-data .player {
-    width: 1em;
     height: 1em;
+    width: 1em;
+}
+
+.healthBar {
+    background-color: #ec2222;
+    height: 50%;
+    display: flex;
+}
+
+.healthBar div {
+    background-color: #0b9d0b;
 }

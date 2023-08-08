@@ -122,24 +122,41 @@ const beginGameAtUrl = (url) => {
 
     let deduplicatedPlayerData = []
     for (const player of state.players) {
-      deduplicatedPlayerData.push(player.name)
+      // Ugly ugly
+      deduplicatedPlayerData.push(JSON.stringify([player.health, player.name]))
     }
     deduplicatedPlayerData = [...new Set(deduplicatedPlayerData)]
-    deduplicatedPlayerData.sort()
+    for (const i in deduplicatedPlayerData) {
+      deduplicatedPlayerData[i] = JSON.parse(deduplicatedPlayerData[i])
+    }
+    deduplicatedPlayerData.sort(([health1, name1], [health2, name2]) => {
+      if (health1 > health2) {
+        return false
+      } else if (health1 < health2) {
+        return true
+      } else {
+        return name1 > name2
+      }
+    })
 
     if (JSON.stringify(deduplicatedPlayerData) !== currentPlayerData) {
       currentPlayerData = JSON.stringify(deduplicatedPlayerData)
 
       const legendChildren = []
-      for (const name of deduplicatedPlayerData) {
-        const elem = document.createElement('div')
-        legendChildren.push(elem)
+      for (const [health, name] of deduplicatedPlayerData) {
+        legendChildren.push(createPlayerDiv(theme, name))
 
-        elem.appendChild(createPlayerDiv(theme, name))
+        const healthBar = document.createElement('div')
+        healthBar.className = "healthBar"
+        const healthBarInner = document.createElement('div')
+        healthBar.appendChild(healthBarInner)
+        healthBarInner.style.width = `${health}%`
+        legendChildren.push(healthBar)
 
         const p = document.createElement('span')
-        elem.appendChild(p)
+        // Intentional vulnerability
         p.innerHTML = name
+        legendChildren.push(p)
       }
 
       legend.replaceChildren(...legendChildren)

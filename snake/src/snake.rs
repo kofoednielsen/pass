@@ -235,7 +235,7 @@ impl GameState {
                 .players
                 .iter()
                 .map(|(name, player)| {
-                    let health = player.tail.len().max(100) as i32;
+                    let health = player.tail.len().min(100) as i32;
                     [Player {
                         name: name.clone(),
                         suffx: "".into(),
