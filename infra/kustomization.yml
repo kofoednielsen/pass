@@ -1,3 +1,4 @@
+namespace: pass
 resources:
   - frontend-deployment.yml
   - frontend-ingress.yml
