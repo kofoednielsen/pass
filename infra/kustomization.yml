@@ -1,10 +1,5 @@
 namespace: pass
 resources:
-  - frontend
-  - sketch
-  - snake
-  - hell
-  - heaven
-  - star
+  - services.yml
   - image-update-automation.yml
   - namespace.yml
