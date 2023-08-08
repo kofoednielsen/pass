@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: star-service
+spec:
+  selector:
+    app: star
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80

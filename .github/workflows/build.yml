@@ -31,6 +31,12 @@ jobs:
             image: ghcr.io/${{github.actor}}/pass-snake
           - context: ./frontend
             image: ghcr.io/${{github.actor}}/pass-frontend
+          - context: ./hell
+            image: ghcr.io/${{github.actor}}/pass-hell
+          - context: ./heaven
+            image: ghcr.io/${{github.actor}}/pass-heaven
+          - context: ./star
+            image: ghcr.io/${{github.actor}}/pass-star
     permissions:
       contents: read
       packages: write

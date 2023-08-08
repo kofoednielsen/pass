@@ -1,15 +1,10 @@
 namespace: pass
 resources:
-  - frontend-deployment.yml
-  - frontend-ingress.yml
-  - frontend-service.yml
-  - image-policies.yml
-  - image-repositories.yml
+  - frontend
+  - sketch
+  - snake
+  - hell
+  - heaven
+  - star
   - image-update-automation.yml
   - namespace.yml
-  - sketch-deployment.yml
-  - sketch-ingress.yml
-  - sketch-service.yml
-  - snake-deployment.yml
-  - snake-ingress.yml
-  - snake-service.yml

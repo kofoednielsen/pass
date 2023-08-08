@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: heaven-deployment
+  labels:
+    app: heaven
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: heaven
+  template:
+    metadata:
+      labels:
+        app: heaven
+    spec:
+      containers:
+        - name: heaven
+          image: ghcr.io/kofoednielsen/pass-heaven:1 # {"$imagepolicy": "pass:heaven"}

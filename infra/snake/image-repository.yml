@@ -1,0 +1,7 @@
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImageRepository
+metadata:
+  name: snake
+spec:
+  image: ghcr.io/kofoednielsen/pass-snake
+  interval: 1m

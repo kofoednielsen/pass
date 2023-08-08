@@ -1,0 +1,6 @@
+resources:
+  - service.yml
+  - deployment.yml
+  - ingress.yml
+  - image-policy.yml
+  - image-repository.yml

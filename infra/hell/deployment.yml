@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hell-deployment
+  labels:
+    app: hell
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: hell
+  template:
+    metadata:
+      labels:
+        app: hell
+    spec:
+      containers:
+        - name: hell
+          image: ghcr.io/kofoednielsen/pass-hell:1 # {"$imagepolicy": "pass:hell"}

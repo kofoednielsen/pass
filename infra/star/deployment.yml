@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: star-deployment
+  labels:
+    app: star
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: star
+  template:
+    metadata:
+      labels:
+        app: star
+    spec:
+      containers:
+        - name: star
+          image: ghcr.io/kofoednielsen/pass-star:1 # {"$imagepolicy": "pass:star"}
