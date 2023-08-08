@@ -115,7 +115,7 @@ receiveLoop conn stateMVar = do
       attack stateMVar name
       state <- C.readMVar stateMVar
       let player = getPlayer (requestName request) state
-      when (playerHealth player <= 0) $ send player (Api.encodeText $ Switch "hell")
+      when (playerHealth player <= 0) $ send player (Api.encodeText $ Switch name)
 
   receiveLoop conn stateMVar
 

@@ -12,7 +12,7 @@ testClientRequest =
 
 testServerResponseSwitch :: IO ()
 testServerResponseSwitch =
-  BL.putStrLn $ encode $ Switch "some-server"
+  BL.putStrLn $ encode $ Switch "playername"
 
 testServerResponseNewState :: IO ()
 testServerResponseNewState =

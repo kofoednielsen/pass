@@ -17,9 +17,9 @@ data IntermediateResponse = IntermediateResponse { event :: Text
 $(deriveJSON defaultOptions ''IntermediateResponse)
 
 encode :: Text -> BL.ByteString
-encode serverName =
+encode playerName =
   let intermediateResponse =
         IntermediateResponse { event = "switch"
-                             , name = serverName
+                             , name = playerName
                              }
   in A.encode intermediateResponse
