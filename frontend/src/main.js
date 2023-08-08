@@ -113,11 +113,15 @@ const beginGameAtUrl = (url) => {
 
     const projectileCanvasChildren = []
     for (const proj of state.projectiles) {
-      const elem = document.createElement('img')
+      const elem = document.createElement('div')
       projectileCanvasChildren.push(elem)
-      elem.src = `../sprites/${theme}/projectile.png`
+      elem.className = "projectile"
       elem.style.marginLeft = `${proj.x * 100 / width}%`
       elem.style.marginTop = `${proj.y * 100 / height}%`
+
+      const img = document.createElement('img')
+      elem.appendChild(img)
+      img.src = `../sprites/${theme}/projectile.png`
     }
     projectileCanvas.replaceChildren(...projectileCanvasChildren)
 
