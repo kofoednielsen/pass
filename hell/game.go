@@ -36,8 +36,7 @@ type player struct {
 	Invincible bool     `json:"invincible"`
 	Pos        position `json:"position"`
 	Health     float64  `json:"health"`
-	quit       chan bool
-	out        chan stateResponse
+	out        chan serverResponse
 	birthday   time.Time
 }
 
@@ -60,15 +59,14 @@ func newHell() *hell {
 	}
 }
 
-func (h *hell) addPlayer(name string, quit chan bool) chan stateResponse {
+func (h *hell) addPlayer(name string) chan serverResponse {
 	player := player{
 		Health:     1.0,
 		Invincible: true,
 		Name:       name,
 		Pos:        position{10, 10},
 		birthday:   time.Now(),
-		out:        make(chan stateResponse),
-		quit:       quit,
+		out:        make(chan serverResponse),
 	}
 	h.players[name] = player
 	return player.out
@@ -101,7 +99,10 @@ func (h *hell) run() {
 		}
 
 		for _, p := range playerList {
-			p.out <- res
+			p.out <- serverResponse{
+				Switch: nil,
+				State: &res,
+			}
 		}
 	}
 }
@@ -129,7 +130,6 @@ func (h *hell) updateFromInput() {
 				log.Printf("Player \"%s\" sent join after already joining\n", p.Name)
 			default:
 				log.Printf("Player \"%s\" sent unknown action \"%s\"\n", p.Name, req.Action)
-				p.quit <- false
 				delete(h.players, p.Name)
 			}
 			h.players[req.Name] = p
@@ -155,6 +155,13 @@ func (h *hell) dealDamage(pos position) {
 }
 
 func (h *hell) kill(p string) {
-	h.players[p].quit <- true
+	res := switchResponse{
+		Event: "switch",
+		Name:  h.players[p].Name,
+	}
+	h.players[p].out <- serverResponse{
+		Switch: &res,
+		State: nil,
+	}
 	delete(h.players, p)
 }

@@ -26,6 +26,12 @@ type stateResponse struct {
 	Projectiles []position `json:"projectiles"`
 }
 
+// Ideally some enum/union/sum type, but I don't know how to do that in Go...
+type serverResponse struct {
+	Switch 		*switchResponse
+	State 		*stateResponse
+}
+
 const port = 80
 
 var game *hell
@@ -58,7 +64,6 @@ func hellHandler(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
-	defer conn.Close()
 	log.Println("Client Connected")
 
 	// Add player
@@ -66,28 +71,15 @@ func hellHandler(w http.ResponseWriter, r *http.Request) {
 	err = conn.ReadJSON(&req)
 	if err != nil || req.Action != "join" {
 		log.Printf("Error reading from websocket: %s", err)
+		conn.Close()
 		return
 	}
-	quit := make(chan bool)
-	resChan := game.addPlayer(req.Name, quit)
+
+	resChan := game.addPlayer(req.Name)
 	log.Println("Player added")
 
 	go handleReads(conn)
 	go handleWrites(conn, resChan)
-
-	if <-quit {
-		res := switchResponse{
-			Event: "switch",
-			Name:  req.Name,
-		}
-		err = conn.WriteJSON(&res)
-		if err != nil {
-			log.Println(err)
-			return
-		}
-	}
-
-	return
 }
 
 func handleReads(conn *websocket.Conn) {
@@ -96,18 +88,34 @@ func handleReads(conn *websocket.Conn) {
 		err := conn.ReadJSON(&req)
 		if err != nil {
 			log.Printf("Client sent unexpected message: %v\n", err)
-			return
+			conn.Close()
+			break
 		}
 		game.in <- req
 	}
 }
 
-func handleWrites(conn *websocket.Conn, resChan chan stateResponse) {
+func handleWrites(conn *websocket.Conn, resChan chan serverResponse) {
+	// Handle all sends at the same time, to ensure we synchronize writes to
+	// the connection.
 	for res := range resChan {
-		err := conn.WriteJSON(&res)
-		if err != nil {
-			log.Printf("Client didn't receive message: %v\n", err)
-			return
+		if res.Switch != nil {
+			err := conn.WriteJSON(res.Switch)
+			if err != nil {
+				log.Printf("Client didn't receive message: %v\n", err)
+				break
+			}
 		}
+		if res.State != nil {
+			err := conn.WriteJSON(res.State)
+			if err != nil {
+				log.Printf("Client didn't receive message: %v\n", err)
+				break
+			}
+		}
+	}
+
+	for range resChan {
+		// Ignore future packages after an error, until the channel closes
 	}
 }
