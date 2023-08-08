@@ -1,3 +1,4 @@
+namespace: pass
 resources:
   - namespace.yml
   - frontend-deployment.yml
