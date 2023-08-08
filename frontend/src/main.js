@@ -11,7 +11,7 @@ const servers = [
   `${protocol}://${location.host}/hell`,
   `${protocol}://${location.host}/snake`,
   `${protocol}://${location.host}/sketch`,
-  // `${protocol}://${location.host}/heaven`,
+  `${protocol}://${location.host}/heaven`,
   `${protocol}://${location.host}/star`,
 ]
 

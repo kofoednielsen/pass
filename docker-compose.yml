@@ -16,9 +16,9 @@ services:
   sketch:
     build:
       context: sketch
-  #heaven:
-  #  build:
-  #    context: heaven
+  heaven:
+    build:
+      context: heaven
   star:
     build:
       context: star
