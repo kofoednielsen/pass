@@ -6,13 +6,13 @@ on:
       - 'main'
 jobs:
   version-job:
+    outputs:
+      version-output: ${{ steps.version-step.outputs.version }}
     steps:
       - name: Retrieve version
         id: version-step
         run: |
           echo version=$(git log --perl-regexp --author='^((?!fluxcdbot).)*$' --oneline | wc -l) >> "$GITHUB_OUTPUT"
-        outputs:
-          version-output: ${{ steps.version-step.outputs.version }}
   build-and-push-image:
     needs: version-job
     runs-on: ubuntu-latest
