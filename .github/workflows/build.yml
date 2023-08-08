@@ -11,11 +11,11 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - dockerfile: ./sketch
+          - context: ./sketch
             image: ghcr.io/${{github.actor}}/pass-sketch
-          - dockerfile: ./snake
+          - context: ./snake
             image: ghcr.io/${{github.actor}}/pass-snake
-          - dockerfile: ./frontend
+          - context: ./frontend
             image: ghcr.io/${{github.actor}}/pass-snake
     permissions:
       contents: read
