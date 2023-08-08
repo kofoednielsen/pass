@@ -21,7 +21,7 @@ data IntermediatePlayer =
   IntermediatePlayer { name :: Text
                      , invincible :: Bool
                      , position :: IntermediatePosition
-                     , health :: Double
+                     , health :: Int
                      }
   deriving (Show)
 

@@ -235,20 +235,21 @@ impl GameState {
                 .players
                 .iter()
                 .map(|(name, player)| {
+                    let health = player.tail.len().max(100) as i32;
                     [Player {
                         name: name.clone(),
                         suffx: "".into(),
                         invincible: false,
                         position: player.position.clone(),
-                        health: 1.0,
+                        health,
                     }]
                     .into_iter()
-                    .chain(player.tail.iter().enumerate().map(|(idx, tail)| Player {
+                    .chain(player.tail.iter().enumerate().map(move |(_, tail)| Player {
                         name: name.clone(),
                         suffx: "".into(),
                         invincible: false,
                         position: tail.clone(),
-                        health: (player.tail.len() as f32 / ((idx + 1) as f32)),
+                        health,
                     }))
                 })
                 .flatten()

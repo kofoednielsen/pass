@@ -22,7 +22,7 @@ testServerResponseNewState =
                       , playerPosition = Position { positionX = 3
                                                   , positionY = 10
                                                   }
-                      , playerHealth = 0.5
+                      , playerHealth = 50
                       }
       projectile = Position { positionX = 1
                             , positionY = 0

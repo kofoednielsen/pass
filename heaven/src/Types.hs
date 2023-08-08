@@ -23,7 +23,7 @@ data Player = Player { playerConnection :: WS.Connection
                      , playerName :: Text
                      , playerInvincible :: Bool
                      , playerPosition :: Position
-                     , playerHealth :: Double
+                     , playerHealth :: Int
                      }
   deriving (Show)
 

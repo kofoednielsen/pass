@@ -45,7 +45,7 @@ newPlayer name conn = do
                   , playerPosition = Position { positionX = x
                                               , positionY = y
                                               }
-                  , playerHealth = 1.0
+                  , playerHealth = 100
                   }
 
 addPlayer :: Player -> State -> State
@@ -74,7 +74,7 @@ server state pending = do
 attack :: C.MVar State -> Text -> IO ()
 attack stateMVar name =
   C.modifyMVar_ stateMVar
-    $ pure . updatePlayer name (\player -> player { playerHealth = playerHealth player - 0.1 })
+    $ pure . updatePlayer name (\player -> player { playerHealth = playerHealth player - 50 })
 
 updatePlayers :: ([Player] -> [Player]) -> (State -> State)
 updatePlayers f s = s { statePlayers = f $ statePlayers s }

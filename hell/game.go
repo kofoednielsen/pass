@@ -35,7 +35,7 @@ type player struct {
 	Name       string   `json:"name"`
 	Invincible bool     `json:"invincible"`
 	Pos        position `json:"position"`
-	Health     float64  `json:"health"`
+	Health     int64  `json:"health"`
 	out        chan serverResponse
 	birthday   time.Time
 }
@@ -61,7 +61,7 @@ func newHell() *hell {
 
 func (h *hell) addPlayer(name string) chan serverResponse {
 	player := player{
-		Health:     1.0,
+		Health:     100,
 		Invincible: true,
 		Name:       name,
 		Pos:        position{10, 10},
@@ -146,9 +146,9 @@ func (h *hell) dealDamage(pos position) {
 	for name, p := range h.players {
 		switch p.Pos {
 		case n, s, w, e:
-			p.Health -= 0.15
+			p.Health -= 15
 		case nw, ne, sw, se:
-			p.Health -= 0.10
+			p.Health -= 10
 		}
 		h.players[name] = p
 	}
