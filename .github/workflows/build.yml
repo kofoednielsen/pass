@@ -1,0 +1,57 @@
+name: build
+
+on:
+  push:
+    tags:
+      - 'v*'
+jobs:
+  build-and-push-image:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - dockerfile: ./sketch/Dockerfile
+            image: ghcr.io/${{github.actor}}/pass-sketch
+          - dockerfile: ./snake/Dockerfile
+            image: ghcr.io/${{github.actor}}/pass-snake
+          - dockerfile: ./frontend/Dockerfile
+            image: ghcr.io/${{github.actor}}/pass-snake
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+        with:
+          registry: ghcr.io
+          username: ${{github.actor}}
+          password: ${{secrets.GITHUB_TOKEN}}
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
+        with:
+          images: ${{ matrix.image }}
+          tags: |
+            # output dev
+            type=ref,event=branch
+            # output 0.1.2
+            type=semver,pattern={{version}}
+            # output 0.1
+            type=semver,pattern={{major}}.{{minor}}
+            # disabled if major zero
+            type=semver,pattern={{major}}
+
+      - name: Build and push Docker image Drill4Net.Agent.Service
+        uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
