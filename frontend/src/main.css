@@ -32,10 +32,22 @@ button {
 .canvas {
     background-color: lightgray;
     position: relative;
+    min-width: 400px;
+    height: 400px;
+    position: relative;
 }
 
 .canvas div {
-    display: grid;
+    width: 100%;
+    height: 100%;
+}
+
+.canvas div * {
+    /* 100% / width */
+    width: 5%;
+    /* 100% / height */
+    height: 5%;
+    position: absolute;
 }
 
 #projectile-canvas {

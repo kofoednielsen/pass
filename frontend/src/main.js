@@ -50,11 +50,7 @@ const sendJoin = () => {
 const beginGameAtUrl = (url) => {
   const joinButton = document.getElementById('join')
   const playerCanvas = document.getElementById('player-canvas')
-  playerCanvas.style.gridTemplateColumns = `repeat(${width}, 20px)`
-  playerCanvas.style.gridTemplateRows = `repeat(${height}, 20px)`
   const projectileCanvas = document.getElementById('projectile-canvas')
-  projectileCanvas.style.gridTemplateColumns = `repeat(${width}, 20px)`
-  projectileCanvas.style.gridTemplateRows = `repeat(${height}, 20px)`
   const legend = document.getElementById('legend-data')
 
   let currentPlayerData = []
@@ -109,8 +105,8 @@ const beginGameAtUrl = (url) => {
     const playerCanvasChildren = []
     for (const player of state.players) {
       const elem = createPlayerDiv(theme, player.name)
-      elem.style.gridColumnStart = player.position.x + 1
-      elem.style.gridRowStart = player.position.y + 1
+      elem.style.marginLeft = `${player.position.x * 100 / width}%`
+      elem.style.marginTop = `${player.position.y * 100 / height}%`
       playerCanvasChildren.push(elem)
     }
     playerCanvas.replaceChildren(...playerCanvasChildren)
@@ -120,8 +116,8 @@ const beginGameAtUrl = (url) => {
       const elem = document.createElement('img')
       projectileCanvasChildren.push(elem)
       elem.src = `../sprites/${theme}/projectile.png`
-      elem.style.gridColumnStart = proj.x + 1
-      elem.style.gridRowStart = proj.y + 1
+      elem.style.marginLeft = `${proj.x * 100 / width}%`
+      elem.style.marginTop = `${proj.y * 100 / height}%`
     }
     projectileCanvas.replaceChildren(...projectileCanvasChildren)
 
