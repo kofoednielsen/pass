@@ -45,15 +45,17 @@ func (p *player) update() {
 }
 
 type hell struct {
-	in          chan request
-	clock       *time.Ticker
-	players     map[string]player
-	projectiles []position
+	in          		chan request
+	clock       		*time.Ticker
+	globalDamageTick	int
+	players     		map[string]player
+	projectiles 		[]position
 }
 
 func newHell() *hell {
 	return &hell{
 		clock:   time.NewTicker(100 * time.Millisecond),
+		globalDamageTick: 0,
 		in:      make(chan request, 10),
 		players: make(map[string]player),
 	}
@@ -84,6 +86,15 @@ func (h *hell) run() {
 		}
 
 		<-h.clock.C
+
+		h.globalDamageTick -= 1
+		if (h.globalDamageTick < 0) {
+			for name, p := range h.players {
+				p.Health -= 1
+				h.players[name] = p
+			}
+			h.globalDamageTick = len(h.players)
+		}
 
 		playerList := make([]player, 0)
 		for name, p := range h.players {
