@@ -55,7 +55,15 @@ const beginGameAtUrl = (url) => {
 
   let currentPlayerData = []
 
-  const createPlayerDiv = (theme, name) => {
+  const createPlayerDiv = () => {
+    const elem = document.createElement('div')
+    elem.className = `player`
+    const img = document.createElement('img')
+    elem.appendChild(img)
+    return elem
+  }
+
+  const populatePlayerDiv = (elem, theme, name) => {
     const pct = nameToDeg(name)
 
     let imgUrl = `../sprites/${theme}/player.png`
@@ -65,16 +73,10 @@ const beginGameAtUrl = (url) => {
       imgUrl = `https://raw.githubusercontent.com/kofoednielsen/pass/main/frontend/sprites/${theme}/player.png`
     }
 
-    const elem = document.createElement('div')
-    elem.className = `player`
     elem.style.webkitMaskImage = `url("${imgUrl}")`
     elem.style.maskImage = `url("${imgUrl}")`
     elem.style.backgroundColor = `hsl(${pct}deg 100% 40%)`
-    const img = document.createElement('img')
-    elem.appendChild(img)
-    img.src = imgUrl
-
-    return elem
+    elem.firstChild.src = imgUrl
   }
 
   socket = new WebSocket(url)
@@ -102,28 +104,43 @@ const beginGameAtUrl = (url) => {
       theme = state.theme
     }
 
-    const playerCanvasChildren = []
-    for (const player of state.players) {
-      const elem = createPlayerDiv(theme, player.name)
+    // Add missing players
+    while (state.players.length > playerCanvas.childElementCount) {
+      playerCanvas.appendChild(createPlayerDiv())
+    }
+    // Delete excess players
+    while (state.players.length < playerCanvas.childElementCount) {
+      playerCanvas.removeChild(playerCanvas.lastChild)
+    }
+    // Update properties
+    for (let i = 0; i < state.players.length; i++) {
+      const player = state.players[i]
+      const elem = playerCanvas.children[i]
+      populatePlayerDiv(elem, theme, player.name)
       elem.style.marginLeft = `${player.position.x * 100 / width}%`
       elem.style.marginTop = `${player.position.y * 100 / height}%`
-      playerCanvasChildren.push(elem)
     }
-    playerCanvas.replaceChildren(...playerCanvasChildren)
 
-    const projectileCanvasChildren = []
-    for (const proj of state.projectiles) {
+    // Add missing projectiles
+    while (state.projectiles.length > projectileCanvas.childElementCount) {
       const elem = document.createElement('div')
-      projectileCanvasChildren.push(elem)
       elem.className = "projectile"
-      elem.style.marginLeft = `${proj.x * 100 / width}%`
-      elem.style.marginTop = `${proj.y * 100 / height}%`
-
       const img = document.createElement('img')
       elem.appendChild(img)
-      img.src = `../sprites/${theme}/projectile.png`
+      projectileCanvas.appendChild(elem)
     }
-    projectileCanvas.replaceChildren(...projectileCanvasChildren)
+    // Delete excess projectiles
+    while (state.projectiles.length < projectileCanvas.childElementCount) {
+      projectileCanvas.removeChild(projectileCanvas.lastChild)
+    }
+    // Update properties
+    for (let i = 0; i < state.projectiles.length; i++) {
+      const proj = state.projectiles[i]
+      const elem = projectileCanvas.children[i]
+      elem.firstChild.src = `../sprites/${theme}/projectile.png`
+      elem.style.marginLeft = `${proj.x * 100 / width}%`
+      elem.style.marginTop = `${proj.y * 100 / height}%`
+    }
 
     let deduplicatedPlayerData = []
     for (const player of state.players) {
@@ -149,7 +166,9 @@ const beginGameAtUrl = (url) => {
 
       const legendChildren = []
       for (const [health, name] of deduplicatedPlayerData) {
-        legendChildren.push(createPlayerDiv(theme, name))
+        const elem = createPlayerDiv()
+        populatePlayerDiv(elem, theme, name)
+        legendChildren.push(elem)
 
         const healthBar = document.createElement('div')
         healthBar.className = "healthBar"
