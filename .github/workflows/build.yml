@@ -47,6 +47,4 @@ jobs:
           context: ${{ matrix.context }}
           file: ${{ matrix.context }}/Dockerfile
           push: true
-          tags: "${{ matrix.image }}:$VERSION"
-        env:
-          VERSION: ${{needs.version-job.outputs.version-output}}
+          tags: "${{ matrix.image }}:${{needs.version-job.outputs.version-output}}"
