@@ -15,4 +15,4 @@ spec:
     spec:
       containers:
         - name: snake
-          image: ghcr.io/kofoednielsen/pass-snake:1 # {"$imagepolicy": "pass:snake"}
+          image: ghcr.io/kofoednielsen/pass-snake:139 # {"$imagepolicy": "pass:snake"}
