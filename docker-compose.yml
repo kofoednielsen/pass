@@ -8,6 +8,8 @@ services:
   hell:
     build:
       context: hell
+    volumes:
+      - ./hell:/app
   snake:
     build:
       context: snake

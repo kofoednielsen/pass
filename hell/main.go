@@ -32,7 +32,7 @@ type serverResponse struct {
 	State 		*stateResponse
 }
 
-const port = 80
+const port = 3001
 
 var game *hell
 
