@@ -6,6 +6,7 @@ on:
       - 'main'
 jobs:
   version-job:
+    runs-on: ubuntu-latest
     outputs:
       version-output: ${{ steps.version-step.outputs.version }}
     steps:
