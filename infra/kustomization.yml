@@ -1,5 +1,5 @@
-namespace: pass
 resources:
+  - namespace.yml
   - frontend-deployment.yml
   - frontend-ingress.yml
   - frontend-service.yml
