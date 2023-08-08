@@ -6,8 +6,7 @@ spec:
   imageRepositoryRef:
     name: frontend
   policy:
-    semver:
-      range: x.x.x
+    numerical: {}
 ---
 apiVersion: image.toolkit.fluxcd.io/v1beta2
 kind: ImagePolicy
@@ -17,8 +16,7 @@ spec:
   imageRepositoryRef:
     name: snake
   policy:
-    semver:
-      range: x.x.x
+    numerical: {}
 ---
 apiVersion: image.toolkit.fluxcd.io/v1beta2
 kind: ImagePolicy
@@ -28,5 +26,5 @@ spec:
   imageRepositoryRef:
     name: sketch
   policy:
-    semver:
-      range: x.x.x
+    numerical: {}
+      
