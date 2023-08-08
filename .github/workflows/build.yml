@@ -10,6 +10,10 @@ jobs:
     outputs:
       version-output: ${{ steps.version-step.outputs.version }}
     steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: 'main'
+          fetch-depth: 0
       - name: Retrieve version
         id: version-step
         run: |
