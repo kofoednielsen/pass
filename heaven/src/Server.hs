@@ -63,11 +63,16 @@ main :: IO ()
 main = do
   state <- C.newMVar newState
   void $ C.forkIO $ gameLoop state
+  putStr "Listening on "
+  putStr host
+  putStr ":"
+  print port
   WS.runServer host port $ server state
 
 server :: C.MVar State -> WS.ServerApp
 server state pending = do
     conn <- WS.acceptRequest pending
+    putStrLn "Connection"
     WS.withPingThread conn 30 (return ()) $ receiveLoop conn state
 
 -- Attacking in heaven makes you lose health (temporary gameplay, not what was planned).
@@ -101,9 +106,10 @@ receiveLoop conn stateMVar = do
                                                                             }
                                                 })
 
-  print request
+  -- print request
   case requestAction request of
     Join -> do
+      putStrLn "Join"
       player <- newPlayer (requestName request) conn
       C.modifyMVar_ stateMVar $ pure . addPlayer player
     Leave -> C.modifyMVar_ stateMVar $ pure . removePlayer name
@@ -112,6 +118,7 @@ receiveLoop conn stateMVar = do
     GoLeft -> changePosition (-1) 0
     GoRight -> changePosition 1 0
     Attack -> do
+      putStrLn "Attack"
       attack stateMVar name
       state <- C.readMVar stateMVar
       let player = getPlayer (requestName request) state
@@ -123,17 +130,17 @@ gameLoop :: C.MVar State -> IO ()
 gameLoop stateMVar = do
   state <- C.readMVar stateMVar
 
-  putStrLn "Current players:"
-  forM_ (statePlayers state) print
+  -- putStrLn "Current players:"
+  -- forM_ (statePlayers state) print
 
   let state' = state
       response = NewState state'
       responseText = Api.encodeText response
-  putStrLn "Response:"
-  print responseText
+  -- putStrLn "Response:"
+  -- print responseText
   broadcast stateMVar responseText
-  putStrLn "----------------"
-  putStrLn ""
+  -- putStrLn "----------------"
+  -- putStrLn ""
 
   C.threadDelay 100000
   gameLoop stateMVar
