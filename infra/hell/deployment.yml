@@ -5,7 +5,6 @@ metadata:
   labels:
     app: hell
 spec:
-  replicas: 3
   selector:
     matchLabels:
       app: hell

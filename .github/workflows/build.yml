@@ -4,6 +4,13 @@ on:
   push:
     branches:
       - 'main'
+    paths:
+      - './hell'
+      - './sketch'
+      - './frontend'
+      - './heaven'
+      - './snake'
+      - './star'
 jobs:
   version-job:
     runs-on: ubuntu-latest

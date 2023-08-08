@@ -5,7 +5,6 @@ metadata:
   labels:
     app: star
 spec:
-  replicas: 3
   selector:
     matchLabels:
       app: star
