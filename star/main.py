@@ -13,12 +13,12 @@ wut = {"p": []}
 
 
 def get_state():
-    return {
+    return json.dumps({
         "event": "state",
         "theme": "star",
         "players": list(players.values()),
         "projectiles": wut["p"],
-    }
+    })
 
 
 DIRECTIONS = {"right": (1, 0), "left": (-1, 0), "up": (0, -1), "down": (0, 1)}
