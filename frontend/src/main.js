@@ -5,13 +5,14 @@ const height = 20
 const isDev = !location.host
 
 // First one here will be the fallback theme
-const knownThemes = ['snake', 'hell', 'sketch', 'heaven', 'star']
+const knownThemes = ['snake', 'hell', 'sketch', 'heaven']
+const protocol =  location.protocol.startsWith('https') ? 'wss' : 'ws'
 const servers = [
-  `ws://${location.host}/hell`,
-  `ws://${location.host}/snake`,
-  `ws://${location.host}/sketch`,
-  // `ws://${location.host}/heaven`,
-  `ws://${location.host}/star`,
+  `${protocol}://${location.host}/hell`,
+  `${protocol}://${location.host}/snake`,
+  `${protocol}://${location.host}/sketch`,
+  // `${protocol}://${location.host}/heaven`,
+  `${protocol}://${location.host}/star`,
 ]
 
 var joined = false
