@@ -60,6 +60,7 @@ type Client = {
   players: {
     [name: string]: {
       position: Position
+      health: number
     }
   }
 }
@@ -75,7 +76,7 @@ function getCurrentState(): ServerState {
         suffx: "the artist",
         invincible: false,
         position: player.position,
-        health: 1.0,
+        health: player.health,
       })
     }
   }
@@ -118,12 +119,14 @@ function handle(socket: WebSocket, addr: Deno.Addr) {
     if (request.action === "join") {
       const x = Math.round(width / 2)
       const y = Math.round(height / 2)
-      client!.players[request.name] = { position: { x, y } }
+      client!.players[request.name] = { position: { x, y }, health: 100 }
     } else {
       const player = client!.players[request.name]
 
       if (player === undefined) {
-        console.error(`${request.name} tried to do '${request.action}' before joining`)
+        console.error(
+          `${request.name} tried to do '${request.action}' before joining`,
+        )
         return
       }
 
@@ -148,16 +151,18 @@ function handle(socket: WebSocket, addr: Deno.Addr) {
           const position = player.position
           // Paint or unpaint the current tile
           map[position.x][position.y] = !map[position.x][position.y]
+          player.health -= 1
           break
         }
       }
     }
 
-    // Switch server when going out of bounds
-    const position = client!.players[request.name].position
+    // Switch server when going out of bounds, or if health is zero
+    const player = client!.players[request.name]
+    const position = player.position
     if (
       position.x < 0 || position.x >= width || position.y < 0 ||
-      position.y >= height
+      position.y >= height || player.health <= 0
     ) {
       delete client!.players[request.name]
       send({
@@ -189,7 +194,7 @@ function handle(socket: WebSocket, addr: Deno.Addr) {
 let hostname = "localhost"
 let port = 8080
 if (Deno.args.length > 0) {
-  const res = Deno.args[0].split(':')
+  const res = Deno.args[0].split(":")
   hostname = res[0]
   port = parseInt(res[1], 10)
 }
@@ -214,7 +219,7 @@ for await (const conn of listener) {
       try {
         handle(upgrade.socket, conn.remoteAddr)
       } catch (e) {
-        console.error(e);
+        console.error(e)
       }
       response = upgrade.response
     }
