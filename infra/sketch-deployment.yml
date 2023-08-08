@@ -1,18 +1,18 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: snake-deployment
+  name: sketch-deployment
   labels:
-    app: snake
+    app: sketch
 spec:
   selector:
     matchLabels:
-      app: snake
+      app: sketch
   template:
     metadata:
       labels:
-        app: snake
+        app: sketch
     spec:
       containers:
-        - name: snake
-          image: ghcr.io/kofoednielsen/pass-snake:0.0.4
+        - name: sketch
+          image: ghcr.io/kofoednielsen/pass-sketch:0.0.4 # {"$imagepolicy": "flux-system:sketch"}

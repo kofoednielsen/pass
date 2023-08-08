@@ -1,9 +1,12 @@
 namespace: pass
 resources:
-  - namespace.yml
   - frontend-deployment.yml
   - frontend-ingress.yml
   - frontend-service.yml
+  - image-policies.yml
+  - image-repositories.yml
+  - image-update-automation.yml
+  - namespace.yml
   - sketch-deployment.yml
   - sketch-ingress.yml
   - sketch-service.yml
