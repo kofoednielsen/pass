@@ -27,6 +27,7 @@ data IntermediatePlayer =
 
 data IntermediateResponse =
   IntermediateResponse { event :: Text
+                       , theme :: Text
                        , players :: [IntermediatePlayer]
                        , projectiles :: [IntermediatePosition]
                        }
@@ -55,6 +56,7 @@ encode state =
   let intermediateResponse =
         IntermediateResponse
         { event = "state"
+        , theme = "heaven"
         , players = map toIntermediatePlayer $ statePlayers state
         , projectiles = map toIntermediatePosition $ stateProjectiles state
         }
