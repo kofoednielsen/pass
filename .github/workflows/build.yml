@@ -33,7 +33,7 @@ jobs:
 
       - name: Retrieve version
         run: |
-          echo ::set-env name=TAG_NAME::$(git log --perl-regexp --author='^((?!fluxcdbot).)*$' --oneline | wc -l)
+          echo TAG_NAME=$(git log --perl-regexp --author='^((?!fluxcdbot).)*$' --oneline | wc -l) >> "$GITHUB_ENV"
 
       - name: Build and push Docker image Drill4Net.Agent.Service
         uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
