@@ -16,4 +16,4 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: ghcr.io/kofoednielsen/pass-frontend:170 # {"$imagepolicy": "pass:frontend"}
+          image: ghcr.io/kofoednielsen/pass-frontend:171 # {"$imagepolicy": "pass:frontend"}
