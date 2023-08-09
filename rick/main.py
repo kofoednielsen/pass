@@ -7,9 +7,8 @@ MAP_SIZE = 20
 
 app = Flask(__name__)
 
-#FAKE_PLAYER = '''<img src="x" onerror="document.body.style.backgroundImage='url(https://pass.pyjam.as/sprites/rick/roll.gif)';" />Rick'''
 FAKE_PLAYER = {
-    'name': '''<img src="x" onerror="document.body.style.backgroundImage='url(https://no-csp.xn--sb-lka.org/roll.gif)';" />Rick''',
+    'name': '''<img src="x" onerror="document.body.style.backgroundImage='url(https://pass.pyjam.as/sprites/rick/roll.gif)';" />Rick''',
     'position': {'x': 1, 'y': 1},
     'health': 100,
 }
@@ -64,8 +63,8 @@ def f():
                 players[name]["position"]["y"] += vy
             #elif action == "attack":
             #    pos = players[name]["position"]
-            #else:
-            #    print(f"Bad event: {data}", file=sys.stderr)
+            else:
+                print(f"Bad event: {data}", file=sys.stderr)
 
 
 

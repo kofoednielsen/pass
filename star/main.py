@@ -31,7 +31,7 @@ def get_state():
 DIRECTIONS = {"right": (1, 0), "left": (-1, 0), "up": (0, -1), "down": (0, 1)}
 
 
-def process_move():
+def process_move(ws):
     # Move projectiles
     for i in range(len(wut["p"])):
         try:
@@ -46,13 +46,16 @@ def process_move():
             wut["p"][i]["y"] %= MAP_SIZE
 
     # Check for collisions
-    for name, player in players.items():
-        pos = player["position"]
+    for name in list(players.keys()):
+        pos = players[name]["position"]
         for i, proj in enumerate(wut["p"]):
             if proj["x"] == pos["x"] and proj["y"] == pos["y"]:
                 # drop hitting projectile
                 del wut["p"][i]
                 players[name]["health"] -= (15 + randint(1, 20))
+        if players[name]["health"] <= 0:
+            ws.send(json.dumps({"event": "switch", "name": name}))
+            del players[name]
 
 
 @app.route("/star", websocket=True)
@@ -60,7 +63,7 @@ def f():
     ws = simple_websocket.Server(request.environ)
     while True:
         ws.send(get_state())
-        process_move()
+        process_move(ws)
 
         try:
             blob = ws.receive(timeout=0.2)
@@ -92,9 +95,6 @@ def f():
                     wut["p"].append({"x": pos["x"], "y": pos["y"], "vx": vx, "vy": vy, "ttl": 25})
             else:
                 print(f"Bad event: {data}", file=sys.stderr)
-
-            if players[name]["health"] <= 0:
-                ws.send(json.dumps({"event": "switch", "name": name}))
 
 
 @app.route("/")
