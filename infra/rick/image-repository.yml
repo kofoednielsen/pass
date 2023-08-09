@@ -1,0 +1,7 @@
+apiVersion: image.toolkit.fluxcd.io/v1beta2
+kind: ImageRepository
+metadata:
+  name: rick
+spec:
+  image: ghcr.io/kofoednielsen/pass-rick
+  interval: 1m

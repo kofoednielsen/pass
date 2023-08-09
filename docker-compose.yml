@@ -24,3 +24,8 @@ services:
       context: star
     volumes:
       - ./star:/app
+  rick:
+    build:
+      context: rick
+    volumes:
+      - ./rick:/app

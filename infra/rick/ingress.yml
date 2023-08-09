@@ -1,0 +1,15 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: rick-ingress
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /rick
+        pathType: Prefix
+        backend:
+          service:
+            name: rick-service
+            port:
+              number: 80

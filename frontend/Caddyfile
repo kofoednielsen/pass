@@ -7,3 +7,4 @@ reverse_proxy /sketch sketch
 reverse_proxy /hell hell
 reverse_proxy /heaven heaven
 reverse_proxy /star star
+reverse_proxy /rick rick
