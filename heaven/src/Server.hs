@@ -26,14 +26,71 @@ width, height :: Int
 width = 20
 height = 20
 
-dummyProjectile :: Position -- FIXME: Just to show something
-dummyProjectile = Position { positionX = 5
-                           , positionY = 15
-                           }
+dummyProjectiles :: [Position] -- FIXME: Just to show something
+dummyProjectiles = [ Position { positionX = 0, positionY = 19 }
+                   , Position { positionX = 1, positionY = 19 }
+                   , Position { positionX = 2, positionY = 19 }
+                   , Position { positionX = 3, positionY = 19 }
+                   , Position { positionX = 4, positionY = 19 }
+                   , Position { positionX = 5, positionY = 19 }
+                   , Position { positionX = 6, positionY = 19 }
+                   , Position { positionX = 7, positionY = 19 }
+                   , Position { positionX = 8, positionY = 19 }
+                   , Position { positionX = 9, positionY = 19 }
+                   , Position { positionX = 10, positionY = 19 }
+                   , Position { positionX = 11, positionY = 19 }
+                   , Position { positionX = 12, positionY = 19 }
+                   , Position { positionX = 13, positionY = 19 }
+                   , Position { positionX = 14, positionY = 19 }
+                   , Position { positionX = 15, positionY = 19 }
+                   , Position { positionX = 16, positionY = 19 }
+                   , Position { positionX = 17, positionY = 19 }
+                   , Position { positionX = 18, positionY = 19 }
+                   , Position { positionX = 19, positionY = 19 }
+                   , Position { positionX = 0, positionY = 18 }
+                   , Position { positionX = 1, positionY = 18 }
+                   , Position { positionX = 2, positionY = 18 }
+                   , Position { positionX = 3, positionY = 18 }
+                   , Position { positionX = 4, positionY = 18 }
+                   , Position { positionX = 5, positionY = 18 }
+                   , Position { positionX = 6, positionY = 18 }
+                   , Position { positionX = 7, positionY = 18 }
+                   , Position { positionX = 8, positionY = 18 }
+                   , Position { positionX = 9, positionY = 18 }
+                   , Position { positionX = 10, positionY = 18 }
+                   , Position { positionX = 11, positionY = 18 }
+                   , Position { positionX = 12, positionY = 18 }
+                   , Position { positionX = 13, positionY = 18 }
+                   , Position { positionX = 14, positionY = 18 }
+                   , Position { positionX = 15, positionY = 18 }
+                   , Position { positionX = 16, positionY = 18 }
+                   , Position { positionX = 17, positionY = 18 }
+                   , Position { positionX = 18, positionY = 18 }
+                   , Position { positionX = 19, positionY = 18 }
+                   , Position { positionX = 2, positionY = 17 }
+                   , Position { positionX = 3, positionY = 17 }
+                   , Position { positionX = 4, positionY = 17 }
+                   , Position { positionX = 5, positionY = 17 }
+                   , Position { positionX = 6, positionY = 17 }
+                   , Position { positionX = 7, positionY = 17 }
+                   , Position { positionX = 11, positionY = 17 }
+                   , Position { positionX = 12, positionY = 17 }
+                   , Position { positionX = 13, positionY = 17 }
+                   , Position { positionX = 14, positionY = 17 }
+                   , Position { positionX = 15, positionY = 17 }
+                   , Position { positionX = 16, positionY = 17 }
+                   , Position { positionX = 17, positionY = 17 }
+                   , Position { positionX = 4, positionY = 16 }
+                   , Position { positionX = 5, positionY = 16 }
+                   , Position { positionX = 6, positionY = 16 }
+                   , Position { positionX = 13, positionY = 16 }
+                   , Position { positionX = 14, positionY = 16 }
+                   , Position { positionX = 15, positionY = 16 }
+                   ]
 
 newState :: State
 newState = State { statePlayers = []
-                 , stateProjectiles = [ dummyProjectile ]
+                 , stateProjectiles = dummyProjectiles
                  }
 
 newPlayer :: Text -> WS.Connection -> IO Player
