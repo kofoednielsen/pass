@@ -33,17 +33,17 @@ jobs:
       matrix:
         include:
           - context: ./sketch
-            image: ghcr.io/${{github.actor}}/pass-sketch
+            image: ghcr.io/kofoednielsen/pass-sketch
           - context: ./snake
-            image: ghcr.io/${{github.actor}}/pass-snake
+            image: ghcr.io/kofoednielsen/pass-snake
           - context: ./frontend
-            image: ghcr.io/${{github.actor}}/pass-frontend
+            image: ghcr.io/kofoednielsen/pass-frontend
           - context: ./hell
-            image: ghcr.io/${{github.actor}}/pass-hell
+            image: ghcr.io/kofoednielsen/pass-hell
           - context: ./heaven
-            image: ghcr.io/${{github.actor}}/pass-heaven
+            image: ghcr.io/kofoednielsen/pass-heaven
           - context: ./star
-            image: ghcr.io/${{github.actor}}/pass-star
+            image: ghcr.io/kofoednielsen/pass-star
     permissions:
       contents: read
       packages: write
