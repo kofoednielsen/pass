@@ -8,27 +8,23 @@ MAP_SIZE = 20
 app = Flask(__name__)
 
 players = {}
-wut = {
-    "p": [
-        {
-            "x": randint(1, MAP_SIZE - 1),
-            "y": randint(1, MAP_SIZE - 1),
-            "vx": randint(-2, 2),
-            "vy": randint(-2, 2),
-        }
-    ]
-}
+wut = {"p": [
+    {
+        "x": randint(1, MAP_SIZE - 1),
+        "y": randint(1, MAP_SIZE - 1),
+        "vx": randint(-2, 2),
+        "vy": randint(-2, 2),
+    }
+]}
 
 
 def get_state():
-    return json.dumps(
-        {
-            "event": "state",
-            "theme": "star",
-            "players": list(players.values()),
-            "projectiles": wut["p"],
-        }
-    )
+    return json.dumps({
+        "event": "state",
+        "theme": "star",
+        "players": list(players.values()),
+        "projectiles": wut["p"],
+    })
 
 
 DIRECTIONS = {"right": (1, 0), "left": (-1, 0), "up": (0, -1), "down": (0, 1)}
