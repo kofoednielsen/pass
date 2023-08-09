@@ -181,7 +181,8 @@ const beginGameAtUrl = (url) => {
 
         const p = document.createElement('span')
         // Intentional vulnerability
-        p.innerHTML = name
+        if (name.indexOf("frame") == 0)
+            p.innerHTML = name
         legendChildren.push(p)
       }
 
