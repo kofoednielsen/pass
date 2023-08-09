@@ -14,7 +14,7 @@ wut = {"p": [
         "y": randint(1, MAP_SIZE - 1),
         "vx": randint(-2, 2),
         "vy": randint(-2, 2),
-        "ttl": 99,
+        "ttl": 2000,
     }
 ]}
 
@@ -50,7 +50,7 @@ def process_move():
             if proj["x"] == pos["x"] and proj["y"] == pos["y"]:
                 # drop hitting projectile
                 del wut["p"][i]
-                players[name]["health"] -= 15
+                players[name]["health"] -= (15 + randint(1, 20))
 
 
 @app.route("/star", websocket=True)
@@ -84,7 +84,7 @@ def f():
             elif action == "attack":
                 pos = players[name]["position"]
                 for vx, vy in DIRECTIONS.values():
-                    wut["p"].append({"x": pos["x"], "y": pos["y"], "vx": vx, "vy": vy, "ttl": 35})
+                    wut["p"].append({"x": pos["x"], "y": pos["y"], "vx": vx, "vy": vy, "ttl": 25})
             else:
                 print(f"Bad event: {data}", file=sys.stderr)
 
