@@ -47,7 +47,7 @@ def f():
         ws.send(get_state())
         process_move()
 
-        blob = ws.receive(timeout=0.3)
+        blob = ws.receive(timeout=0.1)
         if blob:
             data = json.loads(blob)
             print(f"Got data: {data}", file=sys.stderr)
