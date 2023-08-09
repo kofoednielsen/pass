@@ -15,4 +15,4 @@ spec:
     spec:
       containers:
         - name: sketch
-          image: ghcr.io/kofoednielsen/pass-sketch:169 # {"$imagepolicy": "pass:sketch"}
+          image: ghcr.io/kofoednielsen/pass-sketch:170 # {"$imagepolicy": "pass:sketch"}
