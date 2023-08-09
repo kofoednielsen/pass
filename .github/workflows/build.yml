@@ -11,6 +11,7 @@ on:
       - 'heaven/**'
       - 'snake/**'
       - 'star/**'
+      - 'rick/**'
 jobs:
   version-job:
     runs-on: ubuntu-latest
@@ -44,6 +45,8 @@ jobs:
             image: ghcr.io/kofoednielsen/pass-heaven
           - context: ./star
             image: ghcr.io/kofoednielsen/pass-star
+          - context: ./rick
+            image: ghcr.io/kofoednielsen/pass-rick
     permissions:
       contents: read
       packages: write
