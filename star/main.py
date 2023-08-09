@@ -14,6 +14,7 @@ wut = {"p": [
         "y": randint(1, MAP_SIZE - 1),
         "vx": randint(-2, 2),
         "vy": randint(-2, 2),
+        "ttl": 99,
     }
 ]}
 
@@ -33,10 +34,14 @@ DIRECTIONS = {"right": (1, 0), "left": (-1, 0), "up": (0, -1), "down": (0, 1)}
 def process_move():
     # Move projectiles
     for i in range(len(wut["p"])):
-        wut["p"][i]["x"] += wut["p"][i]["vx"]
-        wut["p"][i]["x"] %= MAP_SIZE
-        wut["p"][i]["y"] += wut["p"][i]["vy"]
-        wut["p"][i]["y"] %= MAP_SIZE
+        wut["p"][i]["ttl"] -= 1
+        if wut["p"][i]["ttl"] < 0:
+            del wut["p"][i]
+        else:
+            wut["p"][i]["x"] += wut["p"][i]["vx"]
+            wut["p"][i]["x"] %= MAP_SIZE
+            wut["p"][i]["y"] += wut["p"][i]["vy"]
+            wut["p"][i]["y"] %= MAP_SIZE
 
     # Check for collisions
     for name, player in players.items():
@@ -79,7 +84,7 @@ def f():
             elif action == "attack":
                 pos = players[name]["position"]
                 for vx, vy in DIRECTIONS.values():
-                    wut["p"].append({"x": pos["x"], "y": pos["y"], "vx": vx, "vy": vy})
+                    wut["p"].append({"x": pos["x"], "y": pos["y"], "vx": vx, "vy": vy, "ttl": 35})
             else:
                 print(f"Bad event: {data}", file=sys.stderr)
 
