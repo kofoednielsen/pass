@@ -102,18 +102,62 @@ impl GameState {
     fn find_free_spot(&self, rng: &mut impl Rng) -> Position {
         // Try to find a non-populated spot to start
         let mut position = Position { x: 0, y: 0 };
-        for _ in 1..100 {
+        'main: for _ in 1..100 {
             let x = rng.gen_range(0..WIDTH);
             let y = rng.gen_range(0..HEIGHT);
             position = Position { x, y };
-            'player: for player in self.players.values() {
-                if position == player.position {
-                    continue 'player;
-                }
-                for tail in player.tail.iter() {
-                    if position == *tail {
-                        continue 'player;
+            for player in self.players.values() {
+                let mut is_free = true;
+                let mut check_free = |position| {
+                    if position == player.position {
+                        is_free = false;
+                        return;
                     }
+                    for tail in player.tail.iter() {
+                        if position == *tail {
+                            is_free = false;
+                            return;
+                        }
+                    }
+                };
+                check_free(Position {
+                    x: position.x + 1,
+                    y: position.y + 1,
+                });
+                check_free(Position {
+                    x: position.x,
+                    y: position.y + 1,
+                });
+                check_free(Position {
+                    x: position.x - 1,
+                    y: position.y + 1,
+                });
+                check_free(Position {
+                    x: position.x + 1,
+                    y: position.y,
+                });
+                check_free(Position {
+                    x: position.x,
+                    y: position.y,
+                });
+                check_free(Position {
+                    x: position.x - 1,
+                    y: position.y,
+                });
+                check_free(Position {
+                    x: position.x + 1,
+                    y: position.y - 1,
+                });
+                check_free(Position {
+                    x: position.x,
+                    y: position.y - 1,
+                });
+                check_free(Position {
+                    x: position.x - 1,
+                    y: position.y - 1,
+                });
+                if !is_free {
+                    continue 'main;
                 }
             }
             break;
