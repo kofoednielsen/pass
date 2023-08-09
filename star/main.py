@@ -8,7 +8,7 @@ MAP_SIZE = 20
 app = Flask(__name__)
 
 players = {}
-wut = {"p": []}
+wut = {"p": [ {"x": randint(1, MAP_SIZE-1), "y": randint(1, MAP_SIZE-1), "vx": 1, "vy": 1 ]}
 
 
 def get_state():
@@ -47,7 +47,7 @@ def f():
         ws.send(get_state())
         process_move()
 
-        blob = ws.receive(timeout=0.1)
+        blob = ws.receive(timeout=0.2)
         if blob:
             data = json.loads(blob)
             print(f"Got data: {data}", file=sys.stderr)
