@@ -4,6 +4,7 @@ module Server (main) where
 import Data.List (find)
 import Data.Maybe (fromMaybe)
 import Data.Text (Text)
+import Data.Ord (clamp)
 import qualified Data.Text as T
 import Control.Monad (forM_, void, when)
 import qualified Control.Concurrent as C
@@ -101,8 +102,8 @@ receiveLoop conn stateMVar = do
         C.modifyMVar_ stateMVar
         $ pure . updatePlayer name (\player ->
                                       let position = playerPosition player
-                                      in player { playerPosition = Position { positionX = positionX position + xDiff
-                                                                            , positionY = positionY position + yDiff
+                                      in player { playerPosition = Position { positionX = clamp (0, width) (positionX position + xDiff)
+                                                                            , positionY = clamp (0, height) (positionY position + yDiff)
                                                                             }
                                                 })
 
