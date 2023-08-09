@@ -6,8 +6,9 @@ import (
 )
 
 const (
-	mapHeight = 20
-	mapWidth  = 20
+	mapHeight          = 20
+	mapWidth           = 20
+	projectileLifetime = 20
 )
 
 type position struct {
@@ -16,28 +17,34 @@ type position struct {
 }
 
 func (p position) Up() position {
-	return position{p.X, (p.Y + mapHeight - 1) % mapHeight}
+	return position{p.X, (p.Y - 1)}
 }
 
 func (p position) Down() position {
-	return position{p.X, (p.Y + 1) % mapHeight}
+	return position{p.X, (p.Y + 1)}
 }
 
 func (p position) Left() position {
-	return position{(p.X + mapWidth - 1) % mapWidth, p.Y}
+	return position{(p.X - 1), p.Y}
 }
 
 func (p position) Right() position {
-	return position{(p.X + 1) % mapWidth, p.Y}
+	return position{(p.X + 1), p.Y}
 }
 
 type player struct {
 	Name       string   `json:"name"`
 	Invincible bool     `json:"invincible"`
 	Pos        position `json:"position"`
-	Health     int64  `json:"health"`
+	Health     int64    `json:"health"`
 	out        chan serverResponse
 	birthday   time.Time
+}
+
+type projectile struct {
+	birthday time.Time
+	X        int `json:"x"`
+	Y        int `json:"y"`
 }
 
 func (p *player) update() {
@@ -45,20 +52,20 @@ func (p *player) update() {
 }
 
 type hell struct {
-	in          		chan request
-	clock       		*time.Ticker
-	globalDamageTick	int
-	players     		map[string]player
-	projectiles 		[]position
-	listeners			[]chan serverResponse
+	in               chan request
+	clock            *time.Ticker
+	globalDamageTick int
+	players          map[string]player
+	projectiles      []projectile
+	listeners        []chan serverResponse
 }
 
 func newHell() *hell {
 	return &hell{
-		clock:   time.NewTicker(100 * time.Millisecond),
+		clock:            time.NewTicker(100 * time.Millisecond),
 		globalDamageTick: 0,
-		in:      make(chan request, 10),
-		players: make(map[string]player),
+		in:               make(chan request, 10),
+		players:          make(map[string]player),
 	}
 }
 
@@ -67,14 +74,13 @@ func (h *hell) addListener(channel chan serverResponse) {
 }
 
 func indexOf(listeners []chan serverResponse, channel chan serverResponse) int {
-    for i, listener := range listeners {
-        if (listener == channel) {
-            return i
-        }
-    }
-    return -1
+	for i, listener := range listeners {
+		if listener == channel {
+			return i
+		}
+	}
+	return -1
 }
-
 
 func (h *hell) removeListener(channel chan serverResponse) {
 	i := indexOf(h.listeners, channel)
@@ -106,32 +112,34 @@ func (h *hell) run() {
 
 		<-h.clock.C
 
-		h.globalDamageTick -= 1
-		if (h.globalDamageTick < 0) {
-			for name, p := range h.players {
-				p.Health -= 1
-				h.players[name] = p
-			}
-			h.globalDamageTick = len(h.players)
-		}
-
 		playerList := make([]player, 0)
 		for name, p := range h.players {
 			p.update()
 			playerList = append(playerList, p)
 			h.players[name] = p
 		}
+
+		surivingProjectiles := []projectile{}
+
+		for _, proj := range h.projectiles {
+			if time.Since(proj.birthday) < 200*time.Millisecond {
+				surivingProjectiles = append(surivingProjectiles, proj)
+			}
+		}
+
+		h.projectiles = surivingProjectiles
+
 		res := stateResponse{
 			Event:       "state",
 			Players:     playerList,
-			Projectiles: []position{},
+			Projectiles: surivingProjectiles,
 			Theme:       "hell",
 		}
 
 		for _, listener := range h.listeners {
 			listener <- serverResponse{
 				Switch: nil,
-				State: &res,
+				State:  &res,
 			}
 		}
 	}
@@ -162,6 +170,11 @@ func (h *hell) updateFromInput() {
 				log.Printf("Player \"%s\" sent unknown action \"%s\"\n", p.Name, req.Action)
 				delete(h.players, p.Name)
 			}
+
+			if p.Pos.X >= mapWidth || p.Pos.X < 0 || p.Pos.Y >= mapHeight || p.Pos.Y < 0 {
+				p.Health = 0
+			}
+
 			h.players[req.Name] = p
 		default:
 			// Queue is empty
@@ -180,6 +193,11 @@ func (h *hell) dealDamage(pos position) {
 		case nw, ne, sw, se:
 			p.Health -= 10
 		}
+
+		for _, pos := range []position{n, s, w, e, nw, ne, sw, se} {
+			h.projectiles = append(h.projectiles, projectile{X: pos.X, Y: pos.Y, birthday: time.Now()})
+		}
+
 		h.players[name] = p
 	}
 }
@@ -191,7 +209,7 @@ func (h *hell) kill(p string) {
 	}
 	h.players[p].out <- serverResponse{
 		Switch: &res,
-		State: nil,
+		State:  nil,
 	}
 	delete(h.players, p)
 }

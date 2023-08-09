@@ -19,17 +19,17 @@ type switchResponse struct {
 }
 
 type stateResponse struct {
-	Event       string     `json:"event"`
-	Theme       string     `json:"theme"`
-	Name        string     `json:"name"`
-	Players     []player   `json:"players"`
-	Projectiles []position `json:"projectiles"`
+	Event       string       `json:"event"`
+	Theme       string       `json:"theme"`
+	Name        string       `json:"name"`
+	Players     []player     `json:"players"`
+	Projectiles []projectile `json:"projectiles"`
 }
 
 // Ideally some enum/union/sum type, but I don't know how to do that in Go...
 type serverResponse struct {
-	Switch 		*switchResponse
-	State 		*stateResponse
+	Switch *switchResponse
+	State  *stateResponse
 }
 
 const port = 3001
