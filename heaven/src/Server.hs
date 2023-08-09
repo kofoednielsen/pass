@@ -159,8 +159,8 @@ receiveLoop conn stateMVar = do
         C.modifyMVar_ stateMVar
         $ pure . updatePlayer name (\player ->
                                       let position = playerPosition player
-                                      in player { playerPosition = Position { positionX = clamp (0, width) (positionX position + xDiff)
-                                                                            , positionY = clamp (0, height) (positionY position + yDiff)
+                                      in player { playerPosition = Position { positionX = clamp (0, width - 1) (positionX position + xDiff)
+                                                                            , positionY = clamp (0, height - 1) (positionY position + yDiff)
                                                                             }
                                                 })
 
