@@ -34,9 +34,11 @@ DIRECTIONS = {"right": (1, 0), "left": (-1, 0), "up": (0, -1), "down": (0, 1)}
 def process_move():
     # Move projectiles
     for i in range(len(wut["p"])):
-        wut["p"][i]["ttl"] -= 1
-        if wut["p"][i]["ttl"] < 0:
-            del wut["p"][i]
+        try:
+            wut["p"][i]["ttl"] -= 1
+            if wut["p"][i]["ttl"] < 0:
+                del wut["p"][i]
+        except: pass
         else:
             wut["p"][i]["x"] += wut["p"][i]["vx"]
             wut["p"][i]["x"] %= MAP_SIZE
@@ -60,7 +62,10 @@ def f():
         ws.send(get_state())
         process_move()
 
-        blob = ws.receive(timeout=0.2)
+        try:
+            blob = ws.receive(timeout=0.2)
+        except:
+            continue
         if blob:
             data = json.loads(blob)
             print(f"Got data: {data}", file=sys.stderr)

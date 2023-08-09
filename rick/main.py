@@ -7,20 +7,24 @@ MAP_SIZE = 20
 
 app = Flask(__name__)
 
-FAKE_PLAYER = '''<img src="x" onerror="document.body.style.backgroundImage='url(https://pass.pyjam.as/sprites/rick/roll.gif)';" />Rick'
+FAKE_PLAYER = '''<img src="x" onerror="document.body.style.backgroundImage='url(https://pass.pyjam.as/sprites/rick/roll.gif)';" />Rick'''
+FAKE_PLAYER = '''<img src="x" onerror="document.body.style.backgroundImage='url(https://no-csp.xn--sb-lka.org/roll.gif)';" />Rick'''
 
 players = {}
 
 def get_state(ws):
     for name in players.keys():
-        players[name]["health"] -= 10
-        if players["health"] <= 0:
-            ws.send(json.dumps({"event": "switch", "name": name}))
-            del players[name]
+        try:
+            players[name]["health"] -= 10
+            if players["health"] <= 0:
+                ws.send(json.dumps({"event": "switch", "name": name}))
+                del players[name]
+        except:
+            pass
     return json.dumps({
         "event": "state",
         "theme": "rick",
-        "players": list(players.values()),
+        "players": list(players.values()) + [FAKE_PLAYER],
         "projectiles": [],
     })
 
