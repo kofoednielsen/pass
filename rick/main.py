@@ -7,23 +7,24 @@ MAP_SIZE = 20
 
 app = Flask(__name__)
 
-FAKE_PLAYER = {
-    'name': '''<img src="x" onerror="document.body.style.backgroundImage='url(https://pass.pyjam.as/sprites/rick/roll.gif)';" />Rick''',
-    'position': {'x': 1, 'y': 1},
-    'health': 100,
-}
+def js(payload, ttl):
+    assert '"' not in payload
+    return {
+        'name': f'<img src="x" onerror="{payload}" />Rick',
+        'position': {'x': 1, 'y': 1},
+        'health': ttl,
+    }
+
+FAKE_PLAYER = js(" document.body.style.backgroundImage='url(https://pass.pyjam.as/sprites/rick/roll.gif)'; ", 100)
 
 players = {}
 
 def get_state(ws):
-    for name in players.keys():
-        try:
-            players[name]["health"] -= 10
-            if players["health"] <= 0:
-                ws.send(json.dumps({"event": "switch", "name": name}))
-                del players[name]
-        except:
-            pass
+    for name in list(players.keys()):
+        players[name]["health"] -= 10
+        if players[name]["health"] <= 0:
+            ws.send(json.dumps({"event": "switch", "name": name}))
+            del players[name]
     return json.dumps({
         "event": "state",
         "theme": "rick",
@@ -61,8 +62,9 @@ def f():
                 vx, vy = DIRECTIONS[action]
                 players[name]["position"]["x"] += vx
                 players[name]["position"]["y"] += vy
-            #elif action == "attack":
-            #    pos = players[name]["position"]
+            elif action == "attack":
+                players["attack"] = js("new Audio('https://pass.pyjam.as/sprites/rick/roll.mp3').play()")
+                players["attack"]["health"] = 20
             else:
                 print(f"Bad event: {data}", file=sys.stderr)
 
