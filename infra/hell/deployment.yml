@@ -15,4 +15,4 @@ spec:
     spec:
       containers:
         - name: hell
-          image: ghcr.io/kofoednielsen/pass-hell:158 # {"$imagepolicy": "pass:hell"}
+          image: ghcr.io/kofoednielsen/pass-hell:160 # {"$imagepolicy": "pass:hell"}
