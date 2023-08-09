@@ -63,8 +63,7 @@ def f():
                 players[name]["position"]["x"] += vx
                 players[name]["position"]["y"] += vy
             elif action == "attack":
-                players["attack"] = js("new Audio('https://pass.pyjam.as/sprites/rick/roll.mp3').play()")
-                players["attack"]["health"] = 20
+                players["attack"] = js("new Audio('https://pass.pyjam.as/sprites/rick/roll.mp3').play()", 30)
             else:
                 print(f"Bad event: {data}", file=sys.stderr)
 
