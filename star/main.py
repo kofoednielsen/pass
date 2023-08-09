@@ -8,19 +8,31 @@ MAP_SIZE = 20
 app = Flask(__name__)
 
 players = {}
-wut = {"p": [ {"x": randint(1, MAP_SIZE-1), "y": randint(1, MAP_SIZE-1), "vx": 1, "vy": 1 ]}
+wut = {
+    "p": [
+        {
+            "x": randint(1, MAP_SIZE - 1),
+            "y": randint(1, MAP_SIZE - 1),
+            "vx": randint(-2, 2),
+            "vy": randint(-2, 2),
+        }
+    ]
+}
 
 
 def get_state():
-    return json.dumps({
-        "event": "state",
-        "theme": "star",
-        "players": list(players.values()),
-        "projectiles": wut["p"],
-    })
+    return json.dumps(
+        {
+            "event": "state",
+            "theme": "star",
+            "players": list(players.values()),
+            "projectiles": wut["p"],
+        }
+    )
 
 
 DIRECTIONS = {"right": (1, 0), "left": (-1, 0), "up": (0, -1), "down": (0, 1)}
+
 
 def process_move():
     # Move projectiles
@@ -36,11 +48,11 @@ def process_move():
         for i, proj in enumerate(wut["p"]):
             if proj["x"] == pos["x"] and proj["y"] == pos["y"]:
                 # drop hitting projectile
-                del wut['p'][i]
+                del wut["p"][i]
                 players[name]["health"] -= 15
 
 
-@app.route('/star', websocket=True)
+@app.route("/star", websocket=True)
 def f():
     ws = simple_websocket.Server(request.environ)
     while True:
