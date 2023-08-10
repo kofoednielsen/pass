@@ -15,4 +15,4 @@ spec:
     spec:
       containers:
         - name: star
-          image: ghcr.io/kofoednielsen/pass-star:174 # {"$imagepolicy": "pass:star"}
+          image: ghcr.io/kofoednielsen/pass-star:175 # {"$imagepolicy": "pass:star"}
