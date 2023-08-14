@@ -13,7 +13,7 @@ const servers = [
   `${protocol}://${location.host}/sketch`,
   `${protocol}://${location.host}/heaven`,
   `${protocol}://${location.host}/star`,
-  `${protocol}://${location.host}/rick`,
+ //`${protocol}://${location.host}/rick`,
 ]
 
 var joined = false
