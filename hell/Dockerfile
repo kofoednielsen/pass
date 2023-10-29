@@ -7,7 +7,6 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 COPY *.go ./
-
 RUN go build
 
 CMD gin --port 80 run hell/main.go
